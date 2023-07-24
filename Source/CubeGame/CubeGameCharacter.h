@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InputActionValue.h"
+#include "Components/TimelineComponent.h"
 #include "CubeGameCharacter.generated.h"
 
 
@@ -21,34 +21,64 @@ class ACubeGameCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 	
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* MoveAction;
-
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
 
 public:
 	ACubeGameCharacter();
-	
 
+	UPROPERTY()
+	class UTimelineComponent* TimelineComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UCurveFloat* SprintCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimMontage* InitMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequenceBase* MountAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequenceBase* MMBAnim;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UPhysicsAsset* PhysicsAsset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UCubeAnimInstance* CubeAnimInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName BodyName = "Pelvis";
+	
 protected:
 
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
+	void OnPhysicsInit(UAnimMontage* Montage, bool bInterrupted);
+	
+	void MoveForward(float Value);
 
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-			
+	void MoveRight(float Value);
+
+	void BeginSprint();
+
+	void EndSprint();
+	
+	UFUNCTION()
+	void OnSprintTimelineTick(float Value);
+
+	virtual void Jump() override;
+
+	virtual void Landed(const FHitResult& Hit) override;
+
+	void BeginTighten();
+
+	void EndTighten();
+	
+	void BeginRelax();
+
+	void EndRelax();
+	
+	bool PreventInput;
 
 protected:
 	// APawn interface
