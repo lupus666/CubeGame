@@ -62,6 +62,9 @@ public:
 	float Direction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float AnimSpeed;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bIsInAir;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -69,6 +72,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bIsOnMount;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bIsAttack;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int JumpCount;

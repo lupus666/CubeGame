@@ -26,6 +26,8 @@ void UCubeAnimInstance::UpdateAcceleration()
 void UCubeAnimInstance::UpdateCharacterState()
 {
 	bIsInAir = MovementComponent->IsFalling();
+	bIsOnMount = Character->bIsMounted;
+	AnimSpeed = Character->AnimSpeed;
 	// bIsJumping = Character.
 }
 

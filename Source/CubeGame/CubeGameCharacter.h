@@ -3,23 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "Components/TimelineComponent.h"
+#include "CubeMountCharacter.h"
 #include "CubeGameCharacter.generated.h"
 
 
 UCLASS(config=Game)
-class ACubeGameCharacter : public ACharacter
+class ACubeGameCharacter : public ACubeMountCharacter
 {
 	GENERATED_BODY()
-
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
-
-	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
@@ -27,15 +18,23 @@ class ACubeGameCharacter : public ACharacter
 public:
 	ACubeGameCharacter();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	UPROPERTY()
-	class UTimelineComponent* TimelineComponent;
+	class UTimelineComponent* SprintTimelineComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UCurveFloat* SprintCurve;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UAnimMontage* InitMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimMontage* TightenMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimMontage* AttackMontage;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UAnimSequenceBase* MountAnim;
 
@@ -46,18 +45,26 @@ public:
 	class UPhysicsAsset* PhysicsAsset;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class UCubeAnimInstance* CubeAnimInstance;
-
+	class UAnimInstance* AnimInstance;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyName = "Pelvis";
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MountDistance = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AnimSpeed = 1;
 	
+	bool bIsMounted;
+
 protected:
-
-	void OnPhysicsInit(UAnimMontage* Montage, bool bInterrupted);
+	UFUNCTION()
+	void OnPhysicsInit();
 	
-	void MoveForward(float Value);
+	virtual void MoveForward(float Value) override;
 
-	void MoveRight(float Value);
+	virtual void MoveRight(float Value) override;
 
 	void BeginSprint();
 
@@ -70,27 +77,46 @@ protected:
 
 	virtual void Landed(const FHitResult& Hit) override;
 
-	void BeginTighten();
-
-	void EndTighten();
+	virtual void BeginTighten() override;
 	
-	void BeginRelax();
-
-	void EndRelax();
+	virtual void BeginRelax() override;
 	
-	bool PreventInput;
+	void Aim();
+
+	void Mount();
+
+	void Attack();
+	
+	bool bPreventInput;
+
+	bool bTimeDilation;
+
+	bool bIsAttack;
+	
+	int TightenCount = 0;
+
+	int RelaxCount = 0;
+
+	FTimerHandle JumpTimerHandle;
+
+	FTimerHandle TightenTimerHandle;
+
+	FTimerHandle RelaxTimerHandle;
+
+	FVector MountLocation;
+
+	FName MountBoneName;
+
+public:
+	FVector GetMountLocation() const;
+	
+	FName GetMountBoneName() const;
 
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	// To add mapping context
-	virtual void BeginPlay();
-
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	virtual void BeginPlay() override;
 };
 
