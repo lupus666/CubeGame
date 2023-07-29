@@ -15,6 +15,9 @@ class ACubeGameCharacter : public ACubeMountCharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsConstraintComponent* MovementPhysicsConstraint;
+
 public:
 	ACubeGameCharacter();
 

@@ -15,6 +15,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -23,7 +24,7 @@
 ACubeGameCharacter::ACubeGameCharacter()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(11, 11);
+	GetCapsuleComponent()->InitCapsuleSize(3, 3);
 	
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -45,9 +46,11 @@ ACubeGameCharacter::ACubeGameCharacter()
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 
 	SprintTimelineComponent = CreateDefaultSubobject<UTimelineComponent>(TEXT("SprintTimelineComponent"));
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
+	MovementPhysicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("MovementPhysicsConstraint"));
+	MovementPhysicsConstraint->SetupAttachment(RootComponent);
+
+	// GetMesh()->SetSimulatePhysics(true);
 }
 
 void ACubeGameCharacter::Tick(float DeltaSeconds)
@@ -161,7 +164,7 @@ void ACubeGameCharacter::OnPhysicsInit()
 	if (PhysicsAsset != nullptr)
 	{
 		GetMesh()->SetPhysicsAsset(PhysicsAsset, false);
-		// GetMesh()->bUpdateJointsFromAnimation = true;
+		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
 		PhysicalAnimationComponent->SetSkeletalMeshComponent(GetMesh());
@@ -175,7 +178,8 @@ void ACubeGameCharacter::OnPhysicsInit()
 		PhysicalAnimationData.MaxLinearForce = 0.0f;
 		
 		PhysicalAnimationComponent->ApplyPhysicalAnimationSettingsBelow(BodyName, PhysicalAnimationData, false);
-		GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
+		// GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
+		GetMesh()->SetSimulatePhysics(true);
 		// GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(BodyName, 1.0, false, false);
 	}
 	bPreventInput = false;
