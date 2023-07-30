@@ -49,8 +49,6 @@ ACubeGameCharacter::ACubeGameCharacter()
 
 	MovementPhysicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("MovementPhysicsConstraint"));
 	MovementPhysicsConstraint->SetupAttachment(RootComponent);
-
-	// GetMesh()->SetSimulatePhysics(true);
 }
 
 void ACubeGameCharacter::Tick(float DeltaSeconds)
@@ -159,6 +157,11 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ACubeGameCharacter::Attack);
 }
 
+FName ACubeGameCharacter::GetBodyName() const
+{
+	return BodyName;
+}
+
 void ACubeGameCharacter::OnPhysicsInit()
 {
 	if (PhysicsAsset != nullptr)
@@ -182,6 +185,8 @@ void ACubeGameCharacter::OnPhysicsInit()
 		GetMesh()->SetSimulatePhysics(true);
 		// GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(BodyName, 1.0, false, false);
 	}
+	// MovementPhysicsConstraint->SetConstrainedComponents(GetCapsuleComponent(), EName::None, GetMesh(), BodyName);
+	
 	bPreventInput = false;
 }
 

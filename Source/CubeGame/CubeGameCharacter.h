@@ -52,6 +52,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyName = "Pelvis";
+	FName GetBodyName() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MountDistance = 1000.f;
