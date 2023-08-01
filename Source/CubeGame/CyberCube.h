@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -22,7 +23,7 @@ class CUBEGAME_API ACyberCube : public APawn
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* Camera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	class UPhysicsAsset* PhysicsAsset;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
@@ -41,7 +42,10 @@ class CUBEGAME_API ACyberCube : public APawn
 	class UCurveFloat* DilationCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
-	float RelaxRate = 0.5f;
+	class UCurveFloat* TorqueCurve;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	float RelaxRate = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	float TightenTime = 3.0f;
@@ -60,9 +64,13 @@ class CUBEGAME_API ACyberCube : public APawn
 	
 	FName BodyName = "Pelvis";
 
-	FVector CurrentTorque = FVector(0, 0 ,0);
+	double CurrentTorque = 0;
 	
-	FVectorSpringState ForwardSprintState;
+	FFloatSpringState PhysicalForwardSprintState;
+
+	FFloatSpringState KinematicsForwardSprintState;
+
+	float CurrentSpeed = 0;
 
 public:
 	// Sets default values for this pawn's properties
@@ -85,7 +93,20 @@ public:
 	UPROPERTY(EditAnywhere, Category=CyberCube)
 	float MaxLinearVelocity = 30.f;
 
+	UPROPERTY(EditAnywhere, Category=CyberCube)
 	bool bCanJump;
+
+	UPROPERTY(EditAnywhere, Category=CyberCube)
+	float MaxPower;
+
+	UPROPERTY(EditAnywhere, Category=CyberCube)
+	bool bConstantPower;
+
+	UPROPERTY(EditAnywhere, Category=CyberCube)
+	float RelaxSpeed;
+
+	UPROPERTY(EditAnywhere, Category=CyberCube)
+	float RelaxThreshold = 50.0f;
 
 protected:
 	// Called when the game starts or when spawned
@@ -114,12 +135,19 @@ protected:
 
 	UFUNCTION()
 	void OnTightenTimelineTick(float Value);
-	
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	USkeletalMeshComponent* GetCube() const { return Cube; }
 
+	FName GetBodyName() const { return BodyName; }
+
+	float GetCurrentRelaxRate() const { return CurrentRelaxRate; }
+
+	void SetCurrentRelaxRate(float Value) { this->CurrentRelaxRate = Value; }
 };

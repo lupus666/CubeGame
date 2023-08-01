@@ -3,7 +3,7 @@
 
 #include "CyberCube.h"
 
-#include "LocalizationConfigurationScript.h"
+#include "Pinhole.h"
 #include "Camera/CameraComponent.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -24,10 +24,7 @@ ACyberCube::ACyberCube()
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CubeMesh(TEXT("/Game/CyberCubes_Fractal/Mesh/SKM_CyberCubes_Fractal.SKM_CyberCubes_Fractal"));
 	Cube = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CyberCube"));
 	Cube->SetSkeletalMesh(CubeMesh.Object);
-	// Cube = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CyberCube"));
-	// Cube->SetStaticMesh()
 	Cube->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	Cube->SetSimulatePhysics(true);
 	Cube->SetAngularDamping(0.1f);
 	Cube->SetLinearDamping(0.1f);
 
@@ -49,11 +46,14 @@ ACyberCube::ACyberCube()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false; // We don't want the controller rotating the camera
-
-	RollTorque = 50000000.0f;
-	MaxTorque = 20000000.0;
+	
+	RollTorque = 10000000.0f;
+	MaxTorque = 50000000.0f;
 	JumpImpulse = 350000.0f;
+	MaxPower = 10000000.0f;
+	RelaxSpeed = 2.0f;
 	bCanJump = true; //
+	bConstantPower =  true;
 
 	TightenTimelineComponent = CreateDefaultSubobject<UTimelineComponent>(TEXT("TightenTimelineComponent"));
 	DilationTimelineComponent = CreateDefaultSubobject<UTimelineComponent>(TEXT("DilationTimelineComponent"));
@@ -80,7 +80,7 @@ void ACyberCube::BeginPlay()
 		OnTimelineFloat.BindUFunction(this, TEXT("OnDilationTimelineTick"));
 		DilationTimelineComponent->AddInterpFloat(DilationCurve, OnTimelineFloat);
 	}
-
+	
 	if (PhysicsAsset != nullptr)
 	{
 		Cube->SetPhysicsAsset(PhysicsAsset, false);
@@ -88,6 +88,7 @@ void ACyberCube::BeginPlay()
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
 	}
+	
 	PhysicalAnimationComponent->SetSkeletalMeshComponent(Cube);
 	FPhysicalAnimationData PhysicalAnimationData;
 	PhysicalAnimationData.bIsLocalSimulation = false;
@@ -99,26 +100,56 @@ void ACyberCube::BeginPlay()
 	PhysicalAnimationData.MaxLinearForce = 0.0f;
 	
 	PhysicalAnimationComponent->ApplyPhysicalAnimationSettingsBelow(BodyName, PhysicalAnimationData, false);
-		// GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
-		// Cube->SetSimulatePhysics(true);
-		// GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(BodyName, 1.0, false, false);
+	// Cube->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
+	Cube->SetSimulatePhysics(true);
+
 }
 
 void ACyberCube::MoveForward(float Value)
 {
 	if ( (Controller != nullptr) && (Value != 0.0f))
 	{
-		if (UKismetMathLibrary::VSizeXY(Cube->GetPhysicsAngularVelocityInRadians(BodyName)) <= MaxAngularVelocity && UKismetMathLibrary::VSizeXY(Cube->GetPhysicsLinearVelocity(BodyName)) <= MaxLinearVelocity)
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		// physical movement
+		if (Cube->IsSimulatingPhysics())
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-			// get forward vector
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			const FVector Torque = Direction * RollTorque * Value;
-			CurrentTorque = UKismetMathLibrary::VectorSpringInterp(CurrentTorque, Torque, ForwardSprintState, 20, 1, GetWorld()->GetDeltaSeconds());
-			Cube->AddTorqueInRadians(CurrentTorque, BodyName);
+			const float Omega = UKismetMathLibrary::VSizeXY(Cube->GetPhysicsAngularVelocityInRadians(BodyName));
+			float TargetTorque = RollTorque;
+			if (Omega <= MaxAngularVelocity)
+			{
+				if (Omega >= 1.0f)
+				{
+					if (TorqueCurve) {
+						TargetTorque = TorqueCurve->GetFloatValue(Omega);
+					}
+					else
+					{
+						TargetTorque = MaxPower / Omega;
+					}
+				}
+				CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, TargetTorque, PhysicalForwardSprintState, 20, 1, GetWorld()->GetDeltaSeconds());
+				
+				const FVector Torque = Direction * CurrentTorque * Value;
+			
+				Cube->AddTorqueInRadians(Torque, BodyName, false);
+				// Cube->AddTorqueInRadians(FVector(0, Value * CurrentTorque, 0), BodyName, false);
+			}
 		}
+		else
+		{
+			// pinhole movement
+			Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			// if (CurrentSpeed <= UE_SMALL_NUMBER)
+			// {
+			// 	CurrentSpeed = UKismetMathLibrary::VSizeXY(Cube->GetPhysicsLinearVelocity());
+			// }
+			CurrentSpeed = UKismetMathLibrary::FInterpTo(CurrentSpeed, RelaxSpeed, GetWorld()->GetDeltaSeconds(), 0.1);
+			AddActorWorldOffset(Direction*Value*CurrentSpeed, false);
+			//TODO Add rotation
+		}
+
 	}
 }
 
@@ -126,16 +157,42 @@ void ACyberCube::MoveRight(float Value)
 {
 	if ( (Controller != nullptr) && (Value != 0.0f))
 	{
-		if (UKismetMathLibrary::VSizeXY(Cube->GetPhysicsAngularVelocityInRadians(BodyName)) <= MaxAngularVelocity && UKismetMathLibrary::VSizeXY(Cube->GetPhysicsLinearVelocity(BodyName)) <= MaxLinearVelocity)
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		// physical movement
+		if (Cube->IsSimulatingPhysics())
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
-			// get right vector
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			const FVector Torque = -Direction * RollTorque * Value;
-			CurrentTorque = UKismetMathLibrary::VectorSpringInterp(CurrentTorque, Torque, ForwardSprintState, 20, 1, GetWorld()->GetDeltaSeconds());
-			Cube->AddTorqueInRadians(CurrentTorque, BodyName);
+			const float Omega = UKismetMathLibrary::VSizeXY(Cube->GetPhysicsAngularVelocityInRadians(BodyName));
+			float TargetTorque = RollTorque;
+			if (Omega <= MaxAngularVelocity)
+			{
+				if (TorqueCurve) {
+					TargetTorque = TorqueCurve->GetFloatValue(Omega);
+				}
+				else if (bConstantPower)
+				{
+					TargetTorque = MaxPower / Omega;
+				}
+				CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, TargetTorque, PhysicalForwardSprintState, 20, 1, GetWorld()->GetDeltaSeconds());
+				
+				const FVector Torque = -Direction * CurrentTorque * Value;
+			
+				Cube->AddTorqueInRadians(Torque, BodyName, false);
+				// Cube->AddTorqueInRadians(FVector(-Value * CurrentTorque, 0, 0), BodyName, false);
+			}
+		}
+		else
+		{
+			// pinhole movement
+			Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// if (CurrentSpeed <= UE_SMALL_NUMBER)
+			// {
+			// 	CurrentSpeed = UKismetMathLibrary::VSizeXY(Cube->GetPhysicsLinearVelocity());
+			// }
+			CurrentSpeed = UKismetMathLibrary::FInterpTo(CurrentSpeed, RelaxSpeed, GetWorld()->GetDeltaSeconds(), 0.1);
+			AddActorWorldOffset(Direction*Value*CurrentSpeed, false);
+			//TODO Add rotation
 		}
 	}
 }
@@ -243,6 +300,21 @@ void ACyberCube::EndRelax()
 void ACyberCube::OnTightenTimelineTick(float Value)
 {
 	CurrentRelaxRate = Value;
+
+	PhysicalAnimationComponent->SetStrengthMultiplyer(CurrentRelaxRate);
+
+	// Relax for faster movement
+	// if (CurrentRelaxRate < RelaxThreshold)
+	// {
+	// 	// Cube->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false);
+	// 	Cube->SetSimulatePhysics(false);
+	// 	Cube->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
+	// }
+	// else
+	// {
+	// 	// Cube->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(true);
+	// 	Cube->SetSimulatePhysics(true);
+	// }
 }
 
 // Called every frame
@@ -250,8 +322,13 @@ void ACyberCube::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	PhysicalAnimationComponent->SetStrengthMultiplyer(CurrentRelaxRate);
-	
+	// atmospheric drag
+	if (Cube->IsSimulatingPhysics())
+	{
+		Cube->AddForce(-0.3*0.17*0.17*1.29*Cube->GetPhysicsLinearVelocity(BodyName) * Cube->GetPhysicsLinearVelocity(BodyName), BodyName, false);
+	}
+	// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(UKismetMathLibrary::VSizeXY(Cube->GetPhysicsAngularVelocityInRadians(BodyName))));
+	// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CurrentTorque));
 }
 
 // Called to bind functionality to input
@@ -271,7 +348,5 @@ void ACyberCube::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("Tighten", IE_Released, this, &ACyberCube::EndTighten);
 	PlayerInputComponent->BindAction("Relax", IE_Pressed, this, &ACyberCube::BeginRelax);
 	PlayerInputComponent->BindAction("Relax", IE_Released, this, &ACyberCube::EndRelax);
-	
-
 }
 

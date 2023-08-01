@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CubeMountCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "CubeGameCharacter.generated.h"
 
 
@@ -59,12 +60,31 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AnimSpeed = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Stiffness;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Damping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Restitution;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ContactDistance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RelaxThreshold = 50.f;
 	
 	bool bIsMounted;
 
 protected:
 	UFUNCTION()
 	void OnPhysicsInit();
+
+	void SetUpMovementConstraint();
+
+	void UpdateMovementConstraint(float DeltaSeconds);
 	
 	virtual void MoveForward(float Value) override;
 
@@ -101,6 +121,16 @@ protected:
 
 	int RelaxCount = 0;
 
+	float XLimit = 24.75f;
+
+	float YLimit = 24.75f;
+	
+	float ZLimit = 14.5f;
+
+	float ForwardValue;
+
+	float RightValue;
+
 	FTimerHandle JumpTimerHandle;
 
 	FTimerHandle TightenTimerHandle;
@@ -110,12 +140,29 @@ protected:
 	FVector MountLocation;
 
 	FName MountBoneName;
+	
+	FVectorSpringState MovementSpring;
+
+	FFloatSpringState ConstraintSpring;
+
+	FFloatSpringState StiffnessSpring;
+
+	FFloatSpringState DampingSpring;
+	
+	FFloatSpringState ForwardSpring;
+
+	FFloatSpringState RightSpring;
+
 
 public:
 	FVector GetMountLocation() const;
 	
 	FName GetMountBoneName() const;
 
+	float GetCurrentRelaxRate() const { return CurrentRelaxRate; }
+
+	void SetCurrentRelaxRate(float Value) { CurrentRelaxRate = Value; }
+	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

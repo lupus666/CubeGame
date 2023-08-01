@@ -2,19 +2,24 @@
 
 
 #include "CubeAnimInstance.h"
+
+#include "CyberCube.h"
 #include "KismetAnimationLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void UCubeAnimInstance::UpdateVelocity()
 {
-	Velocity = Character->GetVelocity();
+	Velocity = CyberCube->GetVelocity();
+	// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_VectorToString(Velocity));
 	Speed = UKismetMathLibrary::VSizeXY(Velocity);
 }
 
 void UCubeAnimInstance::UpdateRotaion()
 {
-	Rotation = Character->GetActorRotation();
+	Rotation = CyberCube->GetActorRotation();
 	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, Rotation);
 }
 
@@ -50,18 +55,23 @@ void UCubeAnimInstance::NativeInitializeAnimation()
 	{
 		MovementComponent = Character->GetCharacterMovement();
 	}
+	CyberCube = Cast<ACyberCube>(GetOwningActor());
+	if (CyberCube)
+	{
+		
+	}
 }
 
 void UCubeAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (IsValid(Character))
+	if (IsValid(CyberCube))
 	{
 		UpdateVelocity();
 		UpdateRotaion();
-		UpdateAcceleration();
-		UpdateAim();
-		UpdateCharacterState();
+		// UpdateAcceleration();
+		// UpdateAim();
+		// UpdateCharacterState();
 	}
 }

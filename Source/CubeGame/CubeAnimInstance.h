@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CubeGameCharacter.h"
+#include "CyberCube.h"
 #include "Animation/AnimInstance.h"
 #include "CubeAnimInstance.generated.h"
 
@@ -33,6 +34,9 @@ protected:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	ACubeGameCharacter* Character;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	ACyberCube* CyberCube;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UCharacterMovementComponent* MovementComponent;

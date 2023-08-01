@@ -3,6 +3,11 @@
 
 #include "Pinhole.h"
 
+#include "CubeGameCharacter.h"
+#include "CyberCube.h"
+#include "BaseGizmos/GizmoElementArrow.h"
+#include "Components/CapsuleComponent.h"
+#include "PhysicsEngine/BodyInstance.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -35,27 +40,73 @@ void APinhole::Tick(float DeltaTime)
 
 }
 
+//TODO Debug
 void APinhole::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	if (ACyberCube* CyberCube = Cast<ACyberCube>(OtherActor))
 	{
-		CubeGameCharacter->GetMesh()->SetSimulatePhysics(false);
-		CubeGameCharacter->GetMesh()->SetAllBodiesBelowSimulatePhysics(CubeGameCharacter->GetBodyName(), true, false);
-		UKismetSystemLibrary::PrintString(this, "Begin");
+		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+		{
+			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
+			if (CyberCube->GetCurrentRelaxRate() < CyberCube->RelaxThreshold && CyberCube->GetCube()->IsSimulatingPhysics(CyberCube->GetBodyName()))
+			{
+				CyberCube->GetCube()->GetBodyInstance(CyberCube->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
+				CyberCube->SetCurrentRelaxRate(CyberCube->RelaxThreshold);
+			}
+			// CyberCube->GetCube()->SetSimulatePhysics(false);
+			// CyberCube->GetCube()->SetAllBodiesBelowSimulatePhysics(CyberCube->GetBodyName(), true, false);
+			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
 
+			UKismetSystemLibrary::PrintString(this, "Begin");
+		}
+	}else if(ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	{
+		if (UCapsuleComponent* CapsuleComponent = Cast<UCapsuleComponent>(OtherComp))
+		{
+			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CubeGameCharacter->GetCurrentRelaxRate()));
+
+			if (CubeGameCharacter->GetCurrentRelaxRate() <= CubeGameCharacter->RelaxThreshold && CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
+			{
+				CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
+				// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
+				// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
+			}
+			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CubeGameCharacter->GetCurrentRelaxRate()));
+
+			UKismetSystemLibrary::PrintString(this, "Begin");
+
+		}
+		
 	}
 }
 
 void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	if (ACyberCube* CyberCube = Cast<ACyberCube>(OtherActor))
 	{
-		CubeGameCharacter->GetMesh()->SetAllBodiesBelowSimulatePhysics(CubeGameCharacter->GetBodyName(), false, false);
-		CubeGameCharacter->GetMesh()->SetSimulatePhysics(true);
+		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+		{
+			if (!CyberCube->GetCube()->IsSimulatingPhysics(CyberCube->GetBodyName()))
+			{
+				// CyberCube->GetCube()->GetBodyInstance(CyberCube->GetBodyName())->SetInstanceSimulatePhysics(true, false, true);
+				CyberCube->GetCube()->SetSimulatePhysics(true);
 
-		UKismetSystemLibrary::PrintString(this, "End");
+			}
+			// CyberCube->GetCube()->SetSimulatePhysics(true);
+			UKismetSystemLibrary::PrintString(this, "End");
+		}
+	}else if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	{
+		if (!CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
+		{
+			if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+			{
+				CubeGameCharacter->GetMesh()->SetSimulatePhysics(true);
+				UKismetSystemLibrary::PrintString(this, "End");
+			}
+		}
 	}
 }
 

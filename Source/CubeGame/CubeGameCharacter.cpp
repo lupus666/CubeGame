@@ -41,7 +41,7 @@ ACubeGameCharacter::ACubeGameCharacter()
 	GetCameraBoom()->bEnableCameraLag = true;
 	GetCameraBoom()->CameraLagSpeed = 15.0f;
 	GetCameraBoom()->CameraLagMaxDistance = 20.0f;
-	
+	GetCameraBoom()->AddLocalOffset(FVector(0, 0, 11.0f));
 	// RootComponent = GetMesh();
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 
@@ -57,7 +57,17 @@ void ACubeGameCharacter::Tick(float DeltaSeconds)
 
 	PhysicalAnimationComponent->SetStrengthMultiplyer(CurrentRelaxRate);
 
-	// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CurrentRelaxRate));
+	if (!GetMesh()->IsSimulatingPhysics(BodyName))
+	{
+		// GetMesh()->SetWorldLocation(UKismetMathLibrary::VectorSpringInterp(GetMesh()->GetComponentLocation(),
+		// 	GetCharacterMovement()->GetActorLocation() + FVector(0, 0, 3.0f), MovementSpring, 10, 1, DeltaSeconds));
+		// GetMesh()->SetWorldLocation(GetCharacterMovement()->GetActorLocation());
+		GetMesh()->AddWorldOffset(GetCharacterMovement()->Velocity*DeltaSeconds);
+	}
+	else
+	{
+		UpdateMovementConstraint(DeltaSeconds);
+	}
 }
 
 void ACubeGameCharacter::BeginPlay()
@@ -111,14 +121,13 @@ void ACubeGameCharacter::BeginPlay()
 		}
 	}
 
-	// Set Material
+	//TODO Set Material
 
 
-	// Set UI Widget
+	//TODO Set UI Widget
 
 	
-	// Set Niagara
-	
+	//TODO Set Niagara
 	
 }
 
@@ -168,33 +177,80 @@ void ACubeGameCharacter::OnPhysicsInit()
 	{
 		GetMesh()->SetPhysicsAsset(PhysicsAsset, false);
 		GetMesh()->bUpdateJointsFromAnimation = true;
+		GetMesh()->SetGenerateOverlapEvents(true);
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
-		PhysicalAnimationComponent->SetSkeletalMeshComponent(GetMesh());
-		FPhysicalAnimationData PhysicalAnimationData;
-		PhysicalAnimationData.bIsLocalSimulation = false;
-		PhysicalAnimationData.OrientationStrength = 1000.f;
-		PhysicalAnimationData.AngularVelocityStrength = 15.f;
-		PhysicalAnimationData.PositionStrength = 1000.f;
-		PhysicalAnimationData.VelocityStrength = 30.f;
-		PhysicalAnimationData.MaxAngularForce = 0.0f;
-		PhysicalAnimationData.MaxLinearForce = 0.0f;
-		
-		PhysicalAnimationComponent->ApplyPhysicalAnimationSettingsBelow(BodyName, PhysicalAnimationData, false);
-		// GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
-		GetMesh()->SetSimulatePhysics(true);
-		// GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(BodyName, 1.0, false, false);
 	}
-	// MovementPhysicsConstraint->SetConstrainedComponents(GetCapsuleComponent(), EName::None, GetMesh(), BodyName);
-	
+	PhysicalAnimationComponent->SetSkeletalMeshComponent(GetMesh());
+	FPhysicalAnimationData PhysicalAnimationData;
+	PhysicalAnimationData.bIsLocalSimulation = false;
+	PhysicalAnimationData.OrientationStrength = 1000.f;
+	PhysicalAnimationData.AngularVelocityStrength = 15.f;
+	PhysicalAnimationData.PositionStrength = 1000.f;
+	PhysicalAnimationData.VelocityStrength = 30.f;
+	PhysicalAnimationData.MaxAngularForce = 0.0f;
+	PhysicalAnimationData.MaxLinearForce = 0.0f;
+		
+	PhysicalAnimationComponent->ApplyPhysicalAnimationSettingsBelow(BodyName, PhysicalAnimationData, false);
+	// GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
+	GetMesh()->SetSimulatePhysics(true);
+	SetUpMovementConstraint();
 	bPreventInput = false;
+}
+
+void ACubeGameCharacter::SetUpMovementConstraint()
+{
+	MovementPhysicsConstraint->SetConstrainedComponents(GetCapsuleComponent(), EName::None, GetMesh(), BodyName);
+	// MovementPhysicsConstraint->AddRelativeLocation(FVector(0, 0, 14.5f));
+	MovementPhysicsConstraint->SetLinearXLimit(LCM_Limited, XLimit);
+	MovementPhysicsConstraint->SetLinearYLimit(LCM_Limited, XLimit);
+	MovementPhysicsConstraint->SetLinearZLimit(LCM_Limited, ZLimit);
+
+	// soft constraints
+	MovementPhysicsConstraint->ConstraintInstance.SetSoftLinearLimitParams(true, Stiffness, Damping, Restitution, ContactDistance);
+}
+
+void ACubeGameCharacter::UpdateMovementConstraint(float DeltaSeconds)
+{
+	const double Speed = UKismetMathLibrary::VSize(GetVelocity());
+	UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(Speed));
+
+	// Spring for LinearLimit
+	{
+		float TargetLimit = UKismetMathLibrary::Sqrt(Speed) * UKismetMathLibrary::Loge(Speed + 1) / 4.0f;
+		ConstraintSpring.bPrevTargetValid = false;
+		XLimit = UKismetMathLibrary::FClamp(UKismetMathLibrary::FloatSpringInterp(XLimit, TargetLimit,
+			ConstraintSpring, 20, 1, DeltaSeconds), 17.5, 100.0f);
+		YLimit = XLimit;
+		ZLimit = XLimit;
+		MovementPhysicsConstraint->SetLinearXLimit(LCM_Limited, XLimit);
+		MovementPhysicsConstraint->SetLinearYLimit(LCM_Limited, YLimit);
+		MovementPhysicsConstraint->SetLinearZLimit(LCM_Limited, ZLimit);
+		UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(XLimit));
+	}
+
+	// Spring for SoftLinearLimit
+	 {
+
+		StiffnessSpring.bPrevTargetValid = false;
+		DampingSpring.bPrevTargetValid = false;
+	 	const float TargetStiffness = UKismetMathLibrary::Exp(-Speed)*100 + 20;
+		const float TargetDamping = Speed * Speed / 1000;
+		Stiffness = UKismetMathLibrary::FloatSpringInterp(Stiffness, TargetStiffness, StiffnessSpring, 20, 1, DeltaSeconds);
+		Damping = UKismetMathLibrary::FloatSpringInterp(Damping, TargetDamping, DampingSpring, 20, 1, DeltaSeconds);
+	 	MovementPhysicsConstraint->ConstraintInstance.SetSoftLinearLimitParams(true, Stiffness, Damping, Restitution, ContactDistance);
+		UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(Stiffness));
+
+	 }
 }
 
 void ACubeGameCharacter::MoveForward(float Value)
 {
 	if (!bPreventInput)
 	{
-		ACubeGameCharacterBase::MoveForward(Value);
+		ForwardSpring.bPrevTargetValid = false;
+		ForwardValue = UKismetMathLibrary::FloatSpringInterp(ForwardValue, Value, ForwardSpring, 20, 1, GetWorld()->GetDeltaSeconds());
+		ACubeGameCharacterBase::MoveForward(ForwardValue);
 	}
 }
 
@@ -202,7 +258,10 @@ void ACubeGameCharacter::MoveRight(float Value)
 {
 	if (!bPreventInput)
 	{
-		ACubeGameCharacterBase::MoveRight(Value);
+		RightSpring.bPrevTargetValid = false;
+		RightValue = UKismetMathLibrary::FloatSpringInterp(RightValue, Value, RightSpring, 20, 1, GetWorld()->GetDeltaSeconds());
+
+		ACubeGameCharacterBase::MoveRight(RightValue);
 	}
 }
 
@@ -303,7 +362,7 @@ void ACubeGameCharacter::Mount()
 	GetCameraBoom()->bDoCollisionTest = false;
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
 	FVector Start = CameraManager->K2_GetActorLocation();
-	FVector End = CameraManager->GetActorForwardVector() * MountDistance + Start;
+	FVector End = CameraManager->GetActorForwardVector()*MountDistance + Start;
 	FHitResult OutHit;
 	FCollisionQueryParams TraceParams(FName("MountTrace"), false, GetOwner());
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, TraceParams))
