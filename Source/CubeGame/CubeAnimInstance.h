@@ -11,6 +11,17 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum EShapeType
+{
+	Cube=0		UMETA(DisplayName="Cube"),
+	Sphere		UMETA(DisplayName="Sphere"),
+	Plane		UMETA(DisplayName="Plane"),
+
+	SHAPE_TYPE_COUNT
+};
+
+
 UCLASS()
 class CUBEGAME_API UCubeAnimInstance : public UAnimInstance
 {
@@ -26,6 +37,8 @@ public:
 	void UpdateCharacterState();
 	
 	void UpdateAim();
+
+	void ChangeShape(EShapeType ShapeType);
 	
 protected:
 	virtual void NativeInitializeAnimation() override;
@@ -33,10 +46,7 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	ACubeGameCharacter* Character;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	ACyberCube* CyberCube;
+	APawn* CubePawn;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UCharacterMovementComponent* MovementComponent;
@@ -81,6 +91,9 @@ public:
 	bool bIsAttack;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TArray<bool> ShapeState;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int JumpCount;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -91,4 +104,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FVector Acceleration;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float MorphTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bIsMorphing = false;
+
 };

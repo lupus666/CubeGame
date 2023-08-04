@@ -12,24 +12,27 @@ UCLASS(config=Game)
 class ACubeGameCharacter : public ACubeMountCharacter
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UPhysicsConstraintComponent* MovementPhysicsConstraint;
 
 public:
 	ACubeGameCharacter();
 
 	virtual void Tick(float DeltaSeconds) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsConstraintComponent* MovementPhysicsConstraint;
+	
 	UPROPERTY()
 	class UTimelineComponent* SprintTimelineComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UCurveFloat* SprintCurve;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UCurveFloat* TorqueCurve;
+		
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UAnimMontage* InitMontage;
 
@@ -46,13 +49,31 @@ public:
 	class UAnimSequenceBase* MMBAnim;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	class UPhysicsAsset* PhysicsAsset;
+	class UPhysicsAsset* CubePhysicsAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UPhysicsAsset* SpherePhysicsAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UPhysicsAsset* PlanePhysicsAsset;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequence* CubeSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequence* SphereSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequence* PlaneSequence;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class UAnimInstance* AnimInstance;
+	class UCubeAnimInstance* AnimInstance;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyName = "Pelvis";
+
+	float CurrentTorque;
+
 	FName GetBodyName() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -75,21 +96,52 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RelaxThreshold = 50.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float CenterHeight = 17.5;
 	
 	bool bIsMounted;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float JumpImpulse;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RollTorque;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxTorque;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxAngularVelocity = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxLinearVelocity = 30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bCanJump;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxPower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bConstantPower;
+
+	bool bIsInWindField = false;
+
+	bool bIsSphere = false;
+	
 protected:
 	UFUNCTION()
-	void OnPhysicsInit();
-
-	void SetUpMovementConstraint();
-
+	void SetPhysicalAnimation();
+	
 	void UpdateMovementConstraint(float DeltaSeconds);
 	
 	virtual void MoveForward(float Value) override;
 
 	virtual void MoveRight(float Value) override;
 
+	void UpdateRootMovement(float DeltaSeconds);
+	
 	void BeginSprint();
 
 	void EndSprint();
@@ -110,22 +162,31 @@ protected:
 	void Mount();
 
 	void Attack();
+
+	void ToSphere();
+
+	UFUNCTION()
+	void ToCube();
+
+	void ToPlane();
 	
 	bool bPreventInput;
 
 	bool bTimeDilation;
 
 	bool bIsAttack;
+
+	bool bIsJumping = false;
 	
 	int TightenCount = 0;
 
 	int RelaxCount = 0;
 
-	float XLimit = 24.75f;
+	float XLimit = 50.0f;
 
-	float YLimit = 24.75f;
+	float YLimit = 50.0f;
 	
-	float ZLimit = 14.5f;
+	float ZLimit = 50.0f;
 
 	float ForwardValue;
 
@@ -153,6 +214,9 @@ protected:
 
 	FFloatSpringState RightSpring;
 
+	FFloatSpringState SphereForwardSpring;
+
+	FVectorSpringState RootMovementSpring;
 
 public:
 	FVector GetMountLocation() const;
@@ -162,6 +226,10 @@ public:
 	float GetCurrentRelaxRate() const { return CurrentRelaxRate; }
 
 	void SetCurrentRelaxRate(float Value) { CurrentRelaxRate = Value; }
+
+	void SetUpMovementConstraint();
+
+	void CancelMovementConstraint();
 	
 protected:
 	// APawn interface

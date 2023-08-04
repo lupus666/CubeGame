@@ -3,7 +3,7 @@
 
 #include "CyberCube.h"
 
-#include "Pinhole.h"
+#include "CubeAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -42,6 +42,7 @@ ACyberCube::ACyberCube()
 	SpringArm->TargetArmLength = 300.f;
 	SpringArm->bEnableCameraLag = false;
 	SpringArm->CameraLagSpeed = 3.f;
+	SpringArm->SetRelativeLocation(FVector(0, 0, 17.5));
 	
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -74,21 +75,24 @@ void ACyberCube::BeginPlay()
 		OnTimelineFloat.BindUFunction(this, TEXT("OnTightenTimelineTick"));
 		TightenTimelineComponent->AddInterpFloat(TightenCurve, OnTimelineFloat);
 	}
+	
 	if (DilationCurve)
 	{
 		FOnTimelineFloat OnTimelineFloat;
 		OnTimelineFloat.BindUFunction(this, TEXT("OnDilationTimelineTick"));
 		DilationTimelineComponent->AddInterpFloat(DilationCurve, OnTimelineFloat);
 	}
-	
-	if (PhysicsAsset != nullptr)
+
+	if (UAnimInstance* Anim = Cube->GetAnimInstance())
 	{
-		Cube->SetPhysicsAsset(PhysicsAsset, false);
-		Cube->bUpdateJointsFromAnimation = true;
-		// GetMesh()->bUpdateMeshWhenKinematic = true;
-		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
+		AnimInstance = Cast<UCubeAnimInstance>(Anim);
 	}
 	
+	ToCube();
+}
+
+void ACyberCube::SetPhysicalAnimation()
+{
 	PhysicalAnimationComponent->SetSkeletalMeshComponent(Cube);
 	FPhysicalAnimationData PhysicalAnimationData;
 	PhysicalAnimationData.bIsLocalSimulation = false;
@@ -100,9 +104,9 @@ void ACyberCube::BeginPlay()
 	PhysicalAnimationData.MaxLinearForce = 0.0f;
 	
 	PhysicalAnimationComponent->ApplyPhysicalAnimationSettingsBelow(BodyName, PhysicalAnimationData, false);
+	Cube->SetAllBodiesPhysicsBlendWeight(1.0);
 	// Cube->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
 	Cube->SetSimulatePhysics(true);
-
 }
 
 void ACyberCube::MoveForward(float Value)
@@ -124,7 +128,7 @@ void ACyberCube::MoveForward(float Value)
 					if (TorqueCurve) {
 						TargetTorque = TorqueCurve->GetFloatValue(Omega);
 					}
-					else
+					else if (bConstantPower)
 					{
 						TargetTorque = MaxPower / Omega;
 					}
@@ -200,13 +204,13 @@ void ACyberCube::MoveRight(float Value)
 void ACyberCube::ZoomIn()
 {
 	SpringArm->TargetArmLength = UKismetMathLibrary::Clamp(SpringArm->TargetArmLength - 20.0f, 90.0f, 1000.0f);
-	SpringArm->SetRelativeLocation(FVector(0, 0, 10));
+	// SpringArm->SetRelativeLocation(FVector(0, 0, 10));
 }
 
 void ACyberCube::ZoomOut()
 {
 	SpringArm->TargetArmLength = UKismetMathLibrary::Clamp(SpringArm->TargetArmLength + 20.0f, 90.0f, 1000.0f);
-	SpringArm->SetRelativeLocation(FVector(0, 0, 10));
+	// SpringArm->SetRelativeLocation(FVector(0, 0, 10));
 }
 
 void ACyberCube::TimeDilation()
@@ -317,6 +321,48 @@ void ACyberCube::OnTightenTimelineTick(float Value)
 	// }
 }
 
+void ACyberCube::ToSphere()
+{
+	if (SphereSequence != nullptr && (SpherePhysicsAsset != nullptr) && CurrentRelaxRate == 100.0f)
+	{
+		// Cube->SetSimulatePhysics(false);
+		Cube->SetPhysicsAsset(SpherePhysicsAsset, false);
+		Cube->bUpdateJointsFromAnimation = true;
+		if (AnimInstance && !AnimInstance->bIsMorphing)
+		{
+			AnimInstance->ChangeShape(EShapeType::Sphere);
+			UKismetSystemLibrary::Delay(this, 0.7, FLatentActionInfo(0, FMath::Rand(), TEXT("SetPhysicalAnimation"), this));
+		}
+		else
+		{
+			Cube->SetAnimation(SphereSequence);
+			SetPhysicalAnimation();
+		}
+		SpringArm->SetRelativeLocation(FVector(0, 0, 17.5));
+	}
+}
+
+void ACyberCube::ToCube()
+{
+	if (CubePhysicsAsset != nullptr && CubeSequence != nullptr && CurrentRelaxRate == 100.0f)
+	{
+		// Cube->SetSimulatePhysics(false);
+		Cube->SetPhysicsAsset(CubePhysicsAsset, true);
+		Cube->bUpdateJointsFromAnimation = true;
+		if (AnimInstance && !AnimInstance->bIsMorphing)
+		{
+			AnimInstance->ChangeShape(EShapeType::Cube);
+			UKismetSystemLibrary::Delay(this, 0.5, FLatentActionInfo(0, FMath::Rand(), TEXT("SetPhysicalAnimation"), this));
+		}
+		else
+		{
+			Cube->SetAnimation(CubeSequence);
+			SetPhysicalAnimation();
+		}
+		SpringArm->SetRelativeLocation(FVector(0, 0, 17.5));
+	}
+}
+
 // Called every frame
 void ACyberCube::Tick(float DeltaTime)
 {
@@ -348,5 +394,8 @@ void ACyberCube::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("Tighten", IE_Released, this, &ACyberCube::EndTighten);
 	PlayerInputComponent->BindAction("Relax", IE_Pressed, this, &ACyberCube::BeginRelax);
 	PlayerInputComponent->BindAction("Relax", IE_Released, this, &ACyberCube::EndRelax);
+
+	PlayerInputComponent->BindAction("ToCube", IE_Pressed, this, &ACyberCube::ToCube);
+	PlayerInputComponent->BindAction("ToSphere", IE_Pressed, this, &ACyberCube::ToSphere);
 }
 

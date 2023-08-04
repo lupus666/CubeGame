@@ -24,7 +24,16 @@ class CUBEGAME_API ACyberCube : public APawn
 	class UCameraComponent* Camera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
-	class UPhysicsAsset* PhysicsAsset;
+	class UPhysicsAsset* SpherePhysicsAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	class UAnimSequence* SphereSequence;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsAsset* CubePhysicsAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	class UAnimSequence* CubeSequence;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	class UPhysicalAnimationComponent* PhysicalAnimationComponent;
@@ -43,14 +52,15 @@ class CUBEGAME_API ACyberCube : public APawn
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	class UCurveFloat* TorqueCurve;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
+	class UCubeAnimInstance* AnimInstance;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	float RelaxRate = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CyberCube, meta = (AllowPrivateAccess = "true"))
 	float TightenTime = 3.0f;
-
-	float CurrentRelaxRate;
 	
 	bool bTimeDilation;
 
@@ -107,10 +117,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category=CyberCube)
 	float RelaxThreshold = 50.0f;
+	
+	UPROPERTY(Category=CyberCube, BlueprintReadOnly)
+	float CurrentRelaxRate;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void SetPhysicalAnimation();
 
 	void MoveForward(float Value);
 
@@ -135,6 +151,10 @@ protected:
 
 	UFUNCTION()
 	void OnTightenTimelineTick(float Value);
+	
+	void ToSphere();
+
+	void ToCube();
 
 public:	
 	// Called every frame

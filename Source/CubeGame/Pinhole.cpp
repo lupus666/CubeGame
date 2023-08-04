@@ -46,38 +46,46 @@ void APinhole::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 {
 	if (ACyberCube* CyberCube = Cast<ACyberCube>(OtherActor))
 	{
-		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+		if (UShapeComponent* Shape = Cast<UShapeComponent>(OtherComp))
 		{
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
 			if (CyberCube->GetCurrentRelaxRate() < CyberCube->RelaxThreshold && CyberCube->GetCube()->IsSimulatingPhysics(CyberCube->GetBodyName()))
 			{
+				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
 				CyberCube->GetCube()->GetBodyInstance(CyberCube->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
 				CyberCube->SetCurrentRelaxRate(CyberCube->RelaxThreshold);
+				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
+				UKismetSystemLibrary::PrintString(this, "Begin");
+
 			}
 			// CyberCube->GetCube()->SetSimulatePhysics(false);
 			// CyberCube->GetCube()->SetAllBodiesBelowSimulatePhysics(CyberCube->GetBodyName(), true, false);
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
 
-			UKismetSystemLibrary::PrintString(this, "Begin");
 		}
-	}else if(ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	}
+	else if(ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
 	{
 		if (UCapsuleComponent* CapsuleComponent = Cast<UCapsuleComponent>(OtherComp))
 		{
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CubeGameCharacter->GetCurrentRelaxRate()));
 
 			if (CubeGameCharacter->GetCurrentRelaxRate() <= CubeGameCharacter->RelaxThreshold && CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
 			{
-				CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
-				// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
-				// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
+				if (CubeGameCharacter->bIsSphere)
+				{
+					CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetCollisionProfileName(FName("GoThrough"));
+				}
+				else
+				{
+					UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
+				
+					CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
+					// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
+					// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
+					UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
+
+					UKismetSystemLibrary::PrintString(this, "Begin");
+				}
 			}
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CubeGameCharacter->GetCurrentRelaxRate()));
-
-			UKismetSystemLibrary::PrintString(this, "Begin");
-
 		}
-		
 	}
 }
 
@@ -86,7 +94,7 @@ void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 {
 	if (ACyberCube* CyberCube = Cast<ACyberCube>(OtherActor))
 	{
-		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+		if (UShapeComponent* Box = Cast<UShapeComponent>(OtherComp))
 		{
 			if (!CyberCube->GetCube()->IsSimulatingPhysics(CyberCube->GetBodyName()))
 			{
@@ -97,13 +105,19 @@ void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 			// CyberCube->GetCube()->SetSimulatePhysics(true);
 			UKismetSystemLibrary::PrintString(this, "End");
 		}
-	}else if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+	}
+	else if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
 	{
-		if (!CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
+		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
 		{
-			if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
+			if (!CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
 			{
 				CubeGameCharacter->GetMesh()->SetSimulatePhysics(true);
+				UKismetSystemLibrary::PrintString(this, "End");
+			}
+			else
+			{
+				CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetCollisionProfileName(FName("Cube"));
 				UKismetSystemLibrary::PrintString(this, "End");
 			}
 		}
