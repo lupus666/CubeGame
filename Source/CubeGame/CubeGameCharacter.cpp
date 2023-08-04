@@ -46,8 +46,8 @@ ACubeGameCharacter::ACubeGameCharacter()
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 
 	SprintTimelineComponent = CreateDefaultSubobject<UTimelineComponent>(TEXT("SprintTimelineComponent"));
-	MovementPhysicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("MovementPhysicsConstraint"));
-	MovementPhysicsConstraint->SetupAttachment(RootComponent);
+	// MovementPhysicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("MovementPhysicsConstraint"));
+	// MovementPhysicsConstraint->SetupAttachment(RootComponent);
 	// MovementPhysicsConstraint->SetRelativeLocation(FVector(0, 0, 14.5f));
 
 	// MovementPhysicsConstraint->SetupAttachment(ConstraintActor);
@@ -73,29 +73,29 @@ void ACubeGameCharacter::Tick(float DeltaSeconds)
 	}
 	else
 	{
-		if (bIsSphere)
+		// if (bIsSphere)
 		{
 			const FVector DragDirection = UKismetMathLibrary::Normal(GetMesh()->GetPhysicsLinearVelocity(BodyName));
 			GetMesh()->AddForce(-0.3*0.35*0.35*1.29*DragDirection*UKismetMathLibrary::VSizeSquared(GetMesh()->GetPhysicsLinearVelocity(BodyName)), BodyName, false);
 			UpdateRootMovement(DeltaSeconds);
 		}
-		else if (bIsInWindField)
-		{
-			FVector TargetLocation = GetMesh()->GetComponentLocation();
-			SetActorLocation(TargetLocation, false);
-		}
-		else
-		{
-			UpdateMovementConstraint(DeltaSeconds);
-			if (CurrentRelaxRate < 10.0f)
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 120.0f;
-			}
-			else
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 50.0f;
-			}
-		}
+		// else if (bIsInWindField)
+		// {
+		// 	FVector TargetLocation = GetMesh()->GetComponentLocation();
+		// 	SetActorLocation(TargetLocation, false);
+		// }
+		// else
+		// {
+		// 	UpdateMovementConstraint(DeltaSeconds);
+		// 	if (CurrentRelaxRate < 10.0f)
+		// 	{
+		// 		GetCharacterMovement()->MaxWalkSpeed = 120.0f;
+		// 	}
+		// 	else
+		// 	{
+		// 		GetCharacterMovement()->MaxWalkSpeed = 50.0f;
+		// 	}
+		// }
 	}
 }
 
@@ -222,10 +222,10 @@ void ACubeGameCharacter::SetPhysicalAnimation()
 	// GetMesh()->SetAllBodiesBelowSimulatePhysics(BodyName, true, false);
 	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0);
 	GetMesh()->SetSimulatePhysics(true);
-	if (!bIsSphere)
-	{
-		SetUpMovementConstraint();
-	}
+	// if (!bIsSphere)
+	// {
+	// 	SetUpMovementConstraint();
+	// }
 
 	bPreventInput = false;
 }
@@ -302,8 +302,9 @@ void ACubeGameCharacter::MoveForward(float Value)
 	if (!bPreventInput)
 	{
 		ForwardSpring.bPrevTargetValid = false;
-		ForwardValue = UKismetMathLibrary::FloatSpringInterp(ForwardValue, Value, ForwardSpring, 10, 1, GetWorld()->GetDeltaSeconds());
-		if (bIsSphere)
+		ForwardValue = UKismetMathLibrary::FloatSpringInterp(ForwardValue, Value, ForwardSpring, 20, 1, GetWorld()->GetDeltaSeconds());
+		// if (bIsSphere)
+		if (Controller && abs(ForwardValue - 0.0) > UE_SMALL_NUMBER)
 		{
 			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -325,10 +326,11 @@ void ACubeGameCharacter::MoveForward(float Value)
 							TargetTorque = MaxPower / Omega;
 						}
 					}
+					// TargetTorque *= ForwardValue;
+					SphereForwardSpring.bPrevTargetValid = false;
 					CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, TargetTorque, SphereForwardSpring, 10, 1, GetWorld()->GetDeltaSeconds());
-				
+
 					const FVector Torque = Direction * CurrentTorque * ForwardValue;
-			
 					GetMesh()->AddTorqueInRadians(Torque, BodyName, false);
 					// Cube->AddTorqueInRadians(FVector(0, Value * CurrentTorque, 0), BodyName, false);
 				}
@@ -336,12 +338,18 @@ void ACubeGameCharacter::MoveForward(float Value)
 		}
 		else
 		{
-			// const FRotator Rotation = Controller->GetControlRotation();
-			// const FRotator YawRotation(0, Rotation.Yaw, 0);
-			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			// GetCapsuleComponent()->AddForce(Direction * 100 * ForwardValue);
-			ACubeGameCharacterBase::MoveForward(ForwardValue);
+			SphereForwardSpring.bPrevTargetValid = false;
+			CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, 0, SphereForwardSpring, 10, 1, GetWorld()->GetDeltaSeconds());
 		}
+
+		// else
+		// {
+		// 	// const FRotator Rotation = Controller->GetControlRotation();
+		// 	// const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// 	// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		// 	// GetCapsuleComponent()->AddForce(Direction * 100 * ForwardValue);
+		// 	ACubeGameCharacterBase::MoveForward(ForwardValue);
+		// }
 	}
 }
 
@@ -350,8 +358,9 @@ void ACubeGameCharacter::MoveRight(float Value)
 	if (!bPreventInput)
 	{
 		RightSpring.bPrevTargetValid = false;
-		RightValue = UKismetMathLibrary::FloatSpringInterp(RightValue, Value, RightSpring, 10, 1, GetWorld()->GetDeltaSeconds());
-		if (bIsSphere)
+		RightValue = UKismetMathLibrary::FloatSpringInterp(RightValue, Value, RightSpring, 20, 1, GetWorld()->GetDeltaSeconds());
+		// if (bIsSphere)
+		if (Controller && abs(RightValue - 0.0) > UE_SMALL_NUMBER)
 		{
 			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -373,6 +382,8 @@ void ACubeGameCharacter::MoveRight(float Value)
 							TargetTorque = MaxPower / Omega;
 						}
 					}
+					// TargetTorque *= RightValue;
+					SphereForwardSpring.bPrevTargetValid = false;
 					CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, TargetTorque, SphereForwardSpring, 10, 1, GetWorld()->GetDeltaSeconds());
 			
 					const FVector Torque = -Direction * CurrentTorque * RightValue;
@@ -384,13 +395,18 @@ void ACubeGameCharacter::MoveRight(float Value)
 		}
 		else
 		{
-			// const FRotator Rotation = Controller->GetControlRotation();
-			// const FRotator YawRotation(0, Rotation.Yaw, 0);
-			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			// GetCapsuleComponent()->AddForce(Direction * 100 * RightValue);
-			ACubeGameCharacterBase::MoveRight(RightValue);
-
+			SphereForwardSpring.bPrevTargetValid = false;
+			CurrentTorque = UKismetMathLibrary::FloatSpringInterp(CurrentTorque, 0, SphereForwardSpring, 10, 1, GetWorld()->GetDeltaSeconds());
 		}
+		// else
+		// {
+		// 	// const FRotator Rotation = Controller->GetControlRotation();
+		// 	// const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// 	// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		// 	// GetCapsuleComponent()->AddForce(Direction * 100 * RightValue);
+		// 	ACubeGameCharacterBase::MoveRight(RightValue);
+		//
+		// }
 	}
 }
 
@@ -431,29 +447,30 @@ void ACubeGameCharacter::Jump()
 	{
 		if (UCubeAnimInstance* CubeAnimInstance = Cast<UCubeAnimInstance>(AnimInstance))
 		{
-			if(!bIsSphere)
-			{
-				if (CubeAnimInstance->JumpCount < 2)
-				{
-					CubeAnimInstance->JumpCount += 1;
-					CubeAnimInstance->bIsJumping = true;
-					bIsJumping = true;
-					if (CubeAnimInstance->JumpCount == 1)
-					{
-						GetWorldTimerManager().SetTimer(JumpTimerHandle, [this]()
-						{
-							LaunchCharacter(FVector(0.0f, 0.0f, 600.0f), false, false);
-							GetWorldTimerManager().ClearTimer(JumpTimerHandle);
-
-						}, .2f, false);
-					}
-					else
-					{
-						LaunchCharacter(FVector(0.0f, 0.0f, 600.0f), false, false);
-					}
-				}
-			}
-			else if (!bIsJumping)
+			// if(!bIsSphere)
+			// {
+			// 	if (CubeAnimInstance->JumpCount < 2)
+			// 	{
+			// 		CubeAnimInstance->JumpCount += 1;
+			// 		CubeAnimInstance->bIsJumping = true;
+			// 		bIsJumping = true;
+			// 		if (CubeAnimInstance->JumpCount == 1)
+			// 		{
+			// 			GetWorldTimerManager().SetTimer(JumpTimerHandle, [this]()
+			// 			{
+			// 				LaunchCharacter(FVector(0.0f, 0.0f, 600.0f), false, false);
+			// 				GetWorldTimerManager().ClearTimer(JumpTimerHandle);
+			//
+			// 			}, .2f, false);
+			// 		}
+			// 		else
+			// 		{
+			// 			LaunchCharacter(FVector(0.0f, 0.0f, 600.0f), false, false);
+			// 		}
+			// 	}
+			// }
+			// else if (!bIsJumping)
+			if (!bIsJumping)
 			{
 				bIsJumping = true;
 				GetMesh()->AddImpulse(FVector(0.f, 0.f, JumpImpulse));
@@ -604,10 +621,10 @@ void ACubeGameCharacter::ToCube()
 
 void ACubeGameCharacter::ToPlane()
 {
-	if (CubeSequence && CubePhysicsAsset && CurrentRelaxRate > 99.0f)
+	if (PlaneSequence && PlanePhysicsAsset && CurrentRelaxRate > 99.0f)
 	{
 		GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
-		GetMesh()->SetPhysicsAsset(CubePhysicsAsset, false);
+		GetMesh()->SetPhysicsAsset(PlanePhysicsAsset, false);
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
@@ -617,13 +634,13 @@ void ACubeGameCharacter::ToPlane()
 		}
 		if (AnimInstance && !AnimInstance->bIsMorphing)
 		{
-			AnimInstance->ChangeShape(EShapeType::Cube);
+			AnimInstance->ChangeShape(EShapeType::Plane);
 			// UKismetSystemLibrary::Delay(this, 0.7, FLatentActionInfo(0, FMath::Rand(), TEXT("SetPhysicalAnimation"), this));
 			SetPhysicalAnimation();
 		}
 		else
 		{
-			GetMesh()->PlayAnimation(CubeSequence, false);
+			GetMesh()->PlayAnimation(PlaneSequence, false);
 			SetPhysicalAnimation();
 		}
 	}
