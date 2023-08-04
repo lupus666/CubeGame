@@ -23,11 +23,11 @@ void UWindComponent::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		WindField->WindFieldActors.Add(this->GetOwner());
 		ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(GetOwner());
-		if (!CubeGameCharacter->bIsSphere)
-		{
-			CubeGameCharacter->CancelMovementConstraint();
-			CubeGameCharacter->bIsInWindField = true;
-		}
+		// if (!CubeGameCharacter->bIsSphere)
+		// {
+		// 	CubeGameCharacter->CancelMovementConstraint();
+		// 	CubeGameCharacter->bIsInWindField = true;
+		// }
 	}
 }
 
@@ -38,10 +38,10 @@ void UWindComponent::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	{
 		WindField->WindFieldActors.Remove(this->GetOwner());
 		ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(GetOwner());
-		if (!CubeGameCharacter->bIsSphere)
-		{
-			CubeGameCharacter->bIsInWindField = false;
-			CubeGameCharacter->SetUpMovementConstraint();
-		}
+		// if (!CubeGameCharacter->bIsSphere)
+		// {
+		// 	CubeGameCharacter->bIsInWindField = false;
+		// 	CubeGameCharacter->SetUpMovementConstraint();
+		// }
 	}
 }

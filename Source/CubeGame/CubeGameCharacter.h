@@ -129,7 +129,7 @@ public:
 	bool bIsInWindField = false;
 
 	bool bIsSphere = false;
-	
+
 protected:
 	UFUNCTION()
 	void SetPhysicalAnimation();

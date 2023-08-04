@@ -64,26 +64,22 @@ void APinhole::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	}
 	else if(ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
 	{
-		if (UCapsuleComponent* CapsuleComponent = Cast<UCapsuleComponent>(OtherComp))
+		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
 		{
-
 			if (CubeGameCharacter->GetCurrentRelaxRate() <= CubeGameCharacter->RelaxThreshold && CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
 			{
-				if (CubeGameCharacter->bIsSphere)
-				{
-					CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetCollisionProfileName(FName("GoThrough"));
-				}
-				else
-				{
-					UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
-				
-					CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
-					// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
-					// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
-					UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
+				UKismetSystemLibrary::PrintString(this, "Begin");
+				FBodyInstance* BodyInstance = CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName());
+				FVector LinearVelocity = BodyInstance->GetUnrealWorldVelocity();
+				CubeGameCharacter->GetCharacterMovement()->MaxWalkSpeed = UKismetMathLibrary::VSizeXY(LinearVelocity) * 1.5;
+				BodyInstance->SetInstanceSimulatePhysics(false, true, true);
+				UKismetSystemLibrary::PrintString(this, BodyInstance->GetCollisionProfileName().ToString());
+				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
+			
+				// CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
+				// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
+				// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
 
-					UKismetSystemLibrary::PrintString(this, "Begin");
-				}
 			}
 		}
 	}
@@ -110,16 +106,10 @@ void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	{
 		if (UBoxComponent* Box = Cast<UBoxComponent>(OtherComp))
 		{
-			if (!CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
-			{
-				CubeGameCharacter->GetMesh()->SetSimulatePhysics(true);
-				UKismetSystemLibrary::PrintString(this, "End");
-			}
-			else
-			{
-				CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetCollisionProfileName(FName("Cube"));
-				UKismetSystemLibrary::PrintString(this, "End");
-			}
+			FBodyInstance* BodyInstance = CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName());
+			BodyInstance->SetInstanceSimulatePhysics(true, true, true);
+			UKismetSystemLibrary::PrintString(this, CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->GetCollisionProfileName().ToString());
+			UKismetSystemLibrary::PrintString(this, "End");
 		}
 	}
 }

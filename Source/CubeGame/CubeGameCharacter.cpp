@@ -335,6 +335,11 @@ void ACubeGameCharacter::MoveForward(float Value)
 					// Cube->AddTorqueInRadians(FVector(0, Value * CurrentTorque, 0), BodyName, false);
 				}
 			}
+			else
+			{
+				Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+				AddMovementInput(Direction, ForwardValue);
+			}
 		}
 		else
 		{
@@ -391,6 +396,11 @@ void ACubeGameCharacter::MoveRight(float Value)
 					GetMesh()->AddTorqueInRadians(Torque, BodyName, false);
 					// Cube->AddTorqueInRadians(FVector(0, Value * CurrentTorque, 0), BodyName, false);
 				}
+			}
+			else
+			{
+				Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+				AddMovementInput(Direction, RightValue);
 			}
 		}
 		else
