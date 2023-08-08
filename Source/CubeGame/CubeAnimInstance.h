@@ -17,6 +17,7 @@ enum EShapeType
 	Cube=0		UMETA(DisplayName="Cube"),
 	Sphere		UMETA(DisplayName="Sphere"),
 	Plane		UMETA(DisplayName="Plane"),
+	Fly			UMETA(DisplayName="Fly"),
 
 	SHAPE_TYPE_COUNT
 };

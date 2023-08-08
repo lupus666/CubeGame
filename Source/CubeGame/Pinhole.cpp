@@ -50,12 +50,11 @@ void APinhole::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		{
 			if (CyberCube->GetCurrentRelaxRate() < CyberCube->RelaxThreshold && CyberCube->GetCube()->IsSimulatingPhysics(CyberCube->GetBodyName()))
 			{
-				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CyberCube->GetCurrentRelaxRate()));
 				CyberCube->GetCube()->GetBodyInstance(CyberCube->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
 				CyberCube->SetCurrentRelaxRate(CyberCube->RelaxThreshold);
-				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_FloatToString(CyberCube->GetCurrentRelaxRate()));
-				UKismetSystemLibrary::PrintString(this, "Begin");
-
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CyberCube->GetCurrentRelaxRate()));
+				// UKismetSystemLibrary::PrintString(this, "Begin");
 			}
 			// CyberCube->GetCube()->SetSimulatePhysics(false);
 			// CyberCube->GetCube()->SetAllBodiesBelowSimulatePhysics(CyberCube->GetBodyName(), true, false);
@@ -68,14 +67,13 @@ void APinhole::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		{
 			if (CubeGameCharacter->GetCurrentRelaxRate() <= CubeGameCharacter->RelaxThreshold && CubeGameCharacter->GetMesh()->IsSimulatingPhysics(CubeGameCharacter->GetBodyName()))
 			{
-				UKismetSystemLibrary::PrintString(this, "Begin");
+				// UKismetSystemLibrary::PrintString(this, "Begin");
 				FBodyInstance* BodyInstance = CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName());
 				FVector LinearVelocity = BodyInstance->GetUnrealWorldVelocity();
 				CubeGameCharacter->GetCharacterMovement()->MaxWalkSpeed = UKismetMathLibrary::VSizeXY(LinearVelocity) * 1.5;
 				BodyInstance->SetInstanceSimulatePhysics(false, true, true);
-				UKismetSystemLibrary::PrintString(this, BodyInstance->GetCollisionProfileName().ToString());
-				UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
-			
+				// UKismetSystemLibrary::PrintString(this, BodyInstance->GetCollisionProfileName().ToString());
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(CubeGameCharacter->GetCurrentRelaxRate()));
 				// CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->SetInstanceSimulatePhysics(false, false,true);
 				// CubeGameCharacter->SetCurrentRelaxRate(CubeGameCharacter->RelaxThreshold);
 				// CubeGameCharacter->GetMesh()->SetRelativeLocation(FVector(0, 0, -3));
@@ -108,8 +106,8 @@ void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		{
 			FBodyInstance* BodyInstance = CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName());
 			BodyInstance->SetInstanceSimulatePhysics(true, true, true);
-			UKismetSystemLibrary::PrintString(this, CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->GetCollisionProfileName().ToString());
-			UKismetSystemLibrary::PrintString(this, "End");
+			// UKismetSystemLibrary::PrintString(this, CubeGameCharacter->GetMesh()->GetBodyInstance(CubeGameCharacter->GetBodyName())->GetCollisionProfileName().ToString());
+			// UKismetSystemLibrary::PrintString(this, "End");
 		}
 	}
 }

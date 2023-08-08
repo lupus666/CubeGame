@@ -199,6 +199,7 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("ToSphere", IE_Pressed, this, &ACubeGameCharacter::ToSphere);
 	PlayerInputComponent->BindAction("ToCube", IE_Pressed, this, &ACubeGameCharacter::ToCube);
 	PlayerInputComponent->BindAction("ToPlane", IE_Pressed, this, &ACubeGameCharacter::ToPlane);
+	PlayerInputComponent->BindAction("ToFly", IE_Pressed, this, &ACubeGameCharacter::ToFly);
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -633,8 +634,9 @@ void ACubeGameCharacter::ToPlane()
 {
 	if (PlaneSequence && PlanePhysicsAsset && CurrentRelaxRate > 99.0f)
 	{
-		GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
-		GetMesh()->SetPhysicsAsset(PlanePhysicsAsset, false);
+		GetMesh()->SetSimulatePhysics(false);
+		// GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
+		GetMesh()->SetPhysicsAsset(PlanePhysicsAsset, true);
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
@@ -654,6 +656,39 @@ void ACubeGameCharacter::ToPlane()
 			SetPhysicalAnimation();
 		}
 	}
+}
+
+void ACubeGameCharacter::ToFly()
+{
+	if (FlySequence && FlyPhysicsAsset && CurrentRelaxRate > 99.0f)
+	{
+		GetMesh()->SetSimulatePhysics(false);
+		// GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
+		GetMesh()->SetPhysicsAsset(FlyPhysicsAsset, true);
+		GetMesh()->bUpdateJointsFromAnimation = true;
+		// GetMesh()->bUpdateMeshWhenKinematic = true;
+		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
+		bIsSphere = false;
+		{
+			SetActorLocation(GetMesh()->GetComponentLocation(), false);
+		}
+		if (AnimInstance && !AnimInstance->bIsMorphing)
+		{
+			AnimInstance->ChangeShape(EShapeType::Fly);
+			// UKismetSystemLibrary::Delay(this, 0.7, FLatentActionInfo(0, FMath::Rand(), TEXT("SetPhysicalAnimation"), this));
+			SetPhysicalAnimation();
+		}
+		else
+		{
+			GetMesh()->PlayAnimation(FlySequence, false);
+			SetPhysicalAnimation();
+		}
+	}
+}
+
+void ACubeGameCharacter::ChangeGravityDirection()
+{
+	
 }
 
 

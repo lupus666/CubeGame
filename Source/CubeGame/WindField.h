@@ -23,6 +23,12 @@ public:
 	FRotator WindDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	USceneCaptureComponent2D* SceneCaptureComponent2D;
+
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// UTextureRenderTarget2D* RTDepthMap;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WindSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -61,7 +67,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	FVector ComputeWindLoad(float WindSurfaceArea);
+	FVector CalcWindLoad(float WindSurfaceArea);
 
 	static TArray<FVector> GetCubeNormal(const FVector& ForwardVector);
+
+	float CalcSurfaceArea(FBodyInstance* BodyInstance);
 };

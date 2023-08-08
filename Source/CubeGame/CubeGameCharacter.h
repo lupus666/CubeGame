@@ -56,6 +56,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UPhysicsAsset* PlanePhysicsAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UPhysicsAsset* FlyPhysicsAsset;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UAnimSequence* CubeSequence;
@@ -65,6 +68,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UAnimSequence* PlaneSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UAnimSequence* FlySequence;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCubeAnimInstance* AnimInstance;
@@ -169,6 +175,10 @@ protected:
 	void ToCube();
 
 	void ToPlane();
+
+	void ToFly();
+
+	void ChangeGravityDirection();
 	
 	bool bPreventInput;
 
