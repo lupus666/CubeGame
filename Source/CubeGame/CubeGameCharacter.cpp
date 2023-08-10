@@ -11,6 +11,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "InputCoreTypes.h"
+#include "WindField.h"
 #include "Components/BoxComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,6 +39,7 @@ ACubeGameCharacter::ACubeGameCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 50.0f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 0.0f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	// GetCharacterMovement()->UpdatedComponent = nullptr;
 	
 	GetCameraBoom()->bEnableCameraLag = true;
 	GetCameraBoom()->CameraLagSpeed = 15.0f;
@@ -432,15 +434,23 @@ void ACubeGameCharacter::MoveRight(float Value)
 void ACubeGameCharacter::UpdateRootMovement(float DeltaSeconds)
 {
 	FVector TargetLocation = GetMesh()->GetComponentLocation();
+	// UKismetSystemLibrary::PrintString(this, TargetLocation.ToString());
+
 	FVector CurrentLocation = GetActorLocation();
 	RootMovementSpring.bPrevTargetValid = false;
+	// UKismetSystemLibrary::PrintString(this, CurrentLocation.ToString());
+
 	CurrentLocation = UKismetMathLibrary::VectorSpringInterp(CurrentLocation, TargetLocation, RootMovementSpring, 20, 1, DeltaSeconds);
+	// UKismetSystemLibrary::PrintString(this, CurrentLocation.ToString());
+
+	
 	SetActorLocation(CurrentLocation, false);
+	// GetCapsuleComponent()->SetWorldLocation(CurrentLocation, false);
 }
 
 void ACubeGameCharacter::BeginSprint()
 {
-	if (bIsSphere)
+	if (CubeState == EShapeType::Sphere)
 	{
 		SprintTimelineComponent->Play();
 	}
@@ -448,7 +458,7 @@ void ACubeGameCharacter::BeginSprint()
 
 void ACubeGameCharacter::EndSprint()
 {
-	if (bIsSphere)
+	if (CubeState == EShapeType::Sphere)
 	{
 		SprintTimelineComponent->Reverse();
 	}
@@ -596,7 +606,6 @@ void ACubeGameCharacter::ToSphere()
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
-		bIsSphere = true;
 		if (AnimInstance && !AnimInstance->bIsMorphing)
 		{
 			AnimInstance->ChangeShape(EShapeType::Sphere);
@@ -608,6 +617,7 @@ void ACubeGameCharacter::ToSphere()
 			GetMesh()->PlayAnimation(SphereSequence, false);
 			SetPhysicalAnimation();
 		}
+		CubeState = EShapeType::Sphere;
 	}
 }
 
@@ -620,7 +630,6 @@ void ACubeGameCharacter::ToCube()
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
-		bIsSphere = false;
 		{
 			SetActorLocation(GetMesh()->GetComponentLocation(), false);
 		}
@@ -635,6 +644,7 @@ void ACubeGameCharacter::ToCube()
 			GetMesh()->PlayAnimation(CubeSequence, false);
 			SetPhysicalAnimation();
 		}
+		CubeState = EShapeType::Cube;
 	}
 }
 
@@ -642,13 +652,13 @@ void ACubeGameCharacter::ToPlane()
 {
 	if (PlaneSequence && PlanePhysicsAsset && CurrentRelaxRate > 99.0f)
 	{
-		GetMesh()->SetSimulatePhysics(false);
-		// GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
+		// GetMesh()->SetSimulatePhysics(false);
+		GetMesh()->GetBodyInstance(BodyName)->SetInstanceSimulatePhysics(false, false,true);
 		GetMesh()->SetPhysicsAsset(PlanePhysicsAsset, true);
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
-		bIsSphere = false;
+		
 		{
 			SetActorLocation(GetMesh()->GetComponentLocation(), false);
 		}
@@ -663,6 +673,7 @@ void ACubeGameCharacter::ToPlane()
 			GetMesh()->PlayAnimation(PlaneSequence, false);
 			SetPhysicalAnimation();
 		}
+		CubeState = EShapeType::Plane;
 	}
 }
 
@@ -676,7 +687,6 @@ void ACubeGameCharacter::ToFly()
 		GetMesh()->bUpdateJointsFromAnimation = true;
 		// GetMesh()->bUpdateMeshWhenKinematic = true;
 		// GetMesh()->bIncludeComponentLocationIntoBounds = true;
-		bIsSphere = false;
 		{
 			SetActorLocation(GetMesh()->GetComponentLocation(), false);
 		}
@@ -691,28 +701,88 @@ void ACubeGameCharacter::ToFly()
 			GetMesh()->PlayAnimation(FlySequence, false);
 			SetPhysicalAnimation();
 		}
+		CubeState = EShapeType::Fly;
 	}
 }
 
 void ACubeGameCharacter::RotateForward(float Value)
 {
-	TArray<AActor*> OverlappingActors;
-	GetCapsuleComponent()->GetOverlappingActors(OverlappingActors);
-	for (auto& Actor: OverlappingActors)
+	if (CubeState == EShapeType::Cube && Value != 0.0f && CurrentRelaxRate >= 99.0f)
 	{
-		if (AGravityVolumeBase* GravityVolume= Cast<AGravityVolumeBase>(Actor))
+		TArray<AActor*> OverlappingActors;
+		GetCapsuleComponent()->GetOverlappingActors(OverlappingActors);
+		for (auto& Actor: OverlappingActors)
 		{
-			if (GravityVolume->bCanRotate)
+			if (AGravityVolumeBase* GravityVolume= Cast<AGravityVolumeBase>(Actor))
 			{
-				
+				if (GravityVolume->bCanRotate)
+				{
+					// Rotate Gravity Based On Camera Axis
+					{
+						FVector CameraRotationAxis = GetCameraBoom()->GetRightVector().GetSafeNormal() * (Value > 0.0f ? 1: -1);
+						FVector CubeRotationAxis;
+						for (auto& Normal: AWindField::GetCubeNormals(GetMesh()->GetForwardVector()))
+						{
+							float AngleDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CameraRotationAxis, Normal)));
+							if (AngleDegree >= 0.0f && AngleDegree < 45.0f)
+							{
+								CubeRotationAxis = Normal;
+								break;
+							}
+						}
+						FVector GravityDirection = GravityVolume->GravityDirection;
+						GravityDirection = UKismetMathLibrary::RotateAngleAxis(GravityDirection, DeltaRotateAngle, CubeRotationAxis.GetSafeNormal()).GetSafeNormal();
+						GravityVolume->GravityDirection = GravityDirection;
+						// UKismetSystemLibrary::PrintString(this, CubeRotationAxis.ToString());
+						// UKismetSystemLibrary::PrintString(this, GravityDirection.ToString());
+					}
+					
+					// Rotate Gravity Based On GravityVolume
+					{
+						// FVector RotationAxis = Cast<UShapeComponent>(GravityVolume->GetComponentByClass(UShapeComponent::StaticClass()))->GetRightVector().GetSafeNormal() * (Value > 0.0f ? 1: -1);
+						// FVector GravityDirection = UKismetMathLibrary::RotateAngleAxis(GravityVolume->GravityDirection, 90.0f, RotationAxis).GetSafeNormal();
+						// UKismetSystemLibrary::PrintString(this, RotationAxis.ToString());
+						// UKismetSystemLibrary::PrintString(this, GravityDirection.ToString());
+						//
+						// GravityVolume->GravityDirection = FVector(-1, 0, 0);
+					}
+				}
 			}
 		}
 	}
+	
 }
 
 void ACubeGameCharacter::RotateRight(float Value)
 {
-	
+	if (CubeState == EShapeType::Cube && Value != 0.0f && CurrentRelaxRate >= 99.0f)
+	{
+		TArray<AActor*> OverlappingActors;
+		GetCapsuleComponent()->GetOverlappingActors(OverlappingActors);
+		for (auto& Actor: OverlappingActors)
+		{
+			if (AGravityVolumeBase* GravityVolume= Cast<AGravityVolumeBase>(Actor))
+			{
+				if (GravityVolume->bCanRotate)
+				{
+					FVector CameraRotationAxis = GetCameraBoom()->GetForwardVector().GetSafeNormal() * (Value > 0.0f ? 1: -1);
+					FVector CubeRotationAxis = CameraRotationAxis;
+					// for (auto& Normal: AWindField::GetCubeNormals(GetMesh()->GetForwardVector()))
+					// {
+					// 	float AngleDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CameraRotationAxis, Normal)));
+					// 	if (AngleDegree < 45.0f)
+					// 	{
+					// 		CubeRotationAxis = Normal;
+					// 		break;
+					// 	}
+					// }
+					FVector GravityDirection = GravityVolume->GravityDirection;
+					GravityDirection = UKismetMathLibrary::RotateAngleAxis(GravityDirection, DeltaRotateAngle, CubeRotationAxis);
+					GravityVolume->GravityDirection = GravityDirection;
+				}
+			}
+		}
+	}
 }
 
 

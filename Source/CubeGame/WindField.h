@@ -69,7 +69,7 @@ public:
 
 	FVector CalcWindLoad(float WindSurfaceArea);
 
-	static TArray<FVector> GetCubeNormal(const FVector& ForwardVector);
+	static TArray<FVector> GetCubeNormals(const FVector& ForwardVector);
 
 	float CalcSurfaceArea(FBodyInstance* BodyInstance);
 };

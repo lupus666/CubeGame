@@ -45,31 +45,12 @@ void UGravityComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 			}
 
 			CubeGameCharacter->RotateCameraToGravity(GravityAccumulator);
-			
-			// Camera Rotation
-			// if (!UKismetMathLibrary::NearlyEqual_FloatFloat(LastGravityDirection.Dot(GravityAccumulator.GetSafeNormal()), 1.0))
-			// {
-			// 	if (USpringArmComponent* CameraBoom = CubeGameCharacter->GetCameraBoom())
-			// 	{
-			// 		const FVector RotationAxis = FVector::CrossProduct(LastGravityDirection, GravityAccumulator).GetSafeNormal();
-			// 		const float RotationAngle = FMath::Acos(FVector::DotProduct(LastGravityDirection.GetSafeNormal(), LastGravityDirection.GetSafeNormal()));
-			// 		const float RotationAngleDegrees = FMath::RadiansToDegrees(RotationAngle);
-			// 		// FMatrix RotationMatrix 
-			// 		// CubeGameCharacter->GetFollowCamera()->AddRelativeRotation()
-			// 		FQuat Rotation = FQuat::FindBetweenVectors(LastGravityDirection, GravityAccumulator);
-			// 		// CubeGameCharacter->GetCapsuleComponent()->AddRelativeRotation(Rotation);
-			// 		CubeGameCharacter->GetFollowCamera()->AddRelativeRotation(Rotation);
-			// 		// CameraBoom->AddRelativeRotation(Rotation);
-			// 	}
-			// }
 		}
 		else
 		{
 			const float Mass = Cast<UStaticMeshComponent>(GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass()))->GetMass();
 			Cast<UPrimitiveComponent>(GetOwner()->GetComponentByClass(UPrimitiveComponent::StaticClass()))->AddForce(GravityAccumulator*Mass, EName::None, true);
 		}
-	
-		LastGravityDirection = UKismetMathLibrary::Normal(GravityAccumulator);
 		GravityAccumulator = FVector(0, 0, 0);
 		GravityPriority = 0;
 	}

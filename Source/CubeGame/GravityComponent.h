@@ -24,8 +24,6 @@ protected:
 
 	FVector GravityAccumulator;
 
-	FVector LastGravityDirection = FVector(0, 0, -1);
-	
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

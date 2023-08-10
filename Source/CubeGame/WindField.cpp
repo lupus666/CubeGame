@@ -3,19 +3,14 @@
 
 #include "WindField.h"
 
-#include <string>
-
-#include "CubeAnimInstance.h"
 #include "CubeGameCharacter.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "PhysicsEngine/PhysicsAsset.h"
-#include "Rendering/Texture2DResource.h"
 
 // Sets default values
 AWindField::AWindField()
@@ -61,20 +56,12 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			SkeletalMesh->GetBoneNames(BoneNames);
 			for (FName& BoneName: BoneNames)
 			{
-				if (BoneName == "Pelvis" && CubeGameCharacter->GetCurrentRelaxRate() < 1.0f)
-				{
-					continue;
-				}
 				if (FBodyInstance* BodyInstance = SkeletalMesh->GetBodyInstance(BoneName))
 				{
 				
 					const float SurfaceArea = CalcSurfaceArea(BodyInstance);
 					const FVector Force = CalcWindLoad(SurfaceArea);
 					BodyInstance->AddForce(Force);
-				}
-				if (BoneName == "Pelvis" && CubeGameCharacter->GetCurrentRelaxRate() >= 1.0f)
-				{
-					break;
 				}
 			}
 		}
@@ -182,55 +169,45 @@ FVector AWindField::CalcWindLoad(float WindSurfaceArea)
 	return 0.5* rho * WindSurfaceArea* UKismetMathLibrary::Normal(UKismetMathLibrary::GetForwardVector(WindDirection)) * WindStrength * WindStrength;
 }
 
-TArray<FVector> AWindField::GetCubeNormal(const FVector& ForwardVector)
+TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
 {
 	TArray<FVector> CubeNormals;
-	const FVector UnitForwardVector = UKismetMathLibrary::Normal(ForwardVector);
+	const FVector UnitForwardVector = ForwardVector.GetSafeNormal();
 	CubeNormals.Add(UnitForwardVector);
 	CubeNormals.Add(-UnitForwardVector);
-	CubeNormals.Add(FVector::CrossProduct(UnitForwardVector, FVector(0, 0, 1)));
-	CubeNormals.Add(-FVector::CrossProduct(UnitForwardVector, FVector(0, 0, 1)));
-	CubeNormals.Add(FVector::CrossProduct(UnitForwardVector, FVector(0, 1, 0)));
-	CubeNormals.Add(-FVector::CrossProduct(UnitForwardVector, FVector(0, 1, 0)));
+	CubeNormals.Add(FVector::CrossProduct(UnitForwardVector, FVector(0, 0, 1)).GetSafeNormal());
+	CubeNormals.Add(-FVector::CrossProduct(UnitForwardVector, FVector(0, 0, 1)).GetSafeNormal());
+	CubeNormals.Add(FVector::CrossProduct(UnitForwardVector, FVector(0, 1, 0)).GetSafeNormal());
+	CubeNormals.Add(-FVector::CrossProduct(UnitForwardVector, FVector(0, 1, 0)).GetSafeNormal());
 	return CubeNormals;
 }
 
 float AWindField::CalcSurfaceArea(FBodyInstance* BodyInstance)
 {
-	FHitResult HitResult;
-	const FVector Start = BodyInstance->GetUnrealWorldTransform().GetLocation();
-	const FVector End = Start - UKismetMathLibrary::Normal(WindDirection.Vector()) * 5.0f;
-	// bool TraceResult = BodyInstance->LineTrace(HitResult, Start, End, true);
-	// if (TraceResult)
-	// {
-	// 	return 0;
-	// }
-	// else
+	float BaseArea;
+	if (BodyInstance->GetBodySetup()->AggGeom.BoxElems.Num())
 	{
-		float BaseArea;
-		if (BodyInstance->GetBodySetup()->AggGeom.BoxElems.Num())
+		BaseArea = pow(BodyInstance->GetBodySetup()->AggGeom.BoxElems[0].X*0.01, 2);
+	}
+	else
+	{
+		BaseArea = UE_PI*pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2);
+	}
+	float TotalArea = 0;
+	for (auto& Normal: GetCubeNormals(UKismetMathLibrary::GetForwardVector(BodyInstance->GetUnrealWorldTransform().Rotator())))
+	{
+		float DotProduct = FVector::DotProduct(WindDirection.Vector(), Normal);
+		if (DotProduct > 0.0f)
 		{
-			BaseArea = pow(BodyInstance->GetBodySetup()->AggGeom.BoxElems[0].X*0.01, 2);
+			continue;
 		}
 		else
 		{
-			BaseArea = UE_PI*pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2);
+			TotalArea += BaseArea * -DotProduct/(WindDirection.Vector().Size());
 		}
-		float TotalArea = 0;
-		for (auto& Normal: GetCubeNormal(UKismetMathLibrary::GetForwardVector(BodyInstance->GetUnrealWorldTransform().Rotator())))
-		{
-			float DotProduct = FVector::DotProduct(WindDirection.Vector(), Normal);
-			if (DotProduct > 0.0f)
-			{
-				continue;
-			}
-			else
-			{
-				TotalArea += BaseArea * -DotProduct/(WindDirection.Vector().Size());
-			}
-		}
-		return TotalArea;
 	}
+	return TotalArea;
+	
 }
 
 // Called every frame

@@ -77,21 +77,22 @@ void ACubeGameCharacterBase::RotateCameraToGravity(FVector GravityDirection)
 		}
 		
 		FVector LastForward = CameraBoom->GetForwardVector();
+		// Rotate Capsule
 		{
 			GetCapsuleComponent()->SetConstraintMode(EDOFMode::None);
 			AxisAngleBetween(FVector(0, 0, 1), UpVector, RotationAxis, Angle);
 			const FRotator Rotator = UKismetMathLibrary::RotatorFromAxisAndAngle(RotationAxis, Angle);
+			// GetCapsuleComponent()->SetSimulatePhysics(false);
 			GetCapsuleComponent()->SetWorldRotation(Rotator);
 			GetCapsuleComponent()->SetConstraintMode(EDOFMode::Default);
+			// GetCapsuleComponent()->SetSimulatePhysics(true);
 		}
+		// Rotate Camera
 		{
 			//TODO Debug
-			const FRotator Rotator = UKismetMathLibrary::InverseTransformRotation(GetCapsuleComponent()->GetComponentTransform(), LastForward.Rotation());
-			const float Pitch = UKismetMathLibrary::ClampAngle(Rotator.Pitch, -LookUpLimit, LookUpLimit);
-			CameraBoom->SetRelativeRotation(FRotator(0.0f, Pitch, Rotator.Yaw));
-		}
-		{
-			//TODO rotate mesh
+			// const FRotator Rotator = UKismetMathLibrary::InverseTransformRotation(GetCapsuleComponent()->GetComponentToWorld(), LastForward.Rotation());
+			// const float Pitch = UKismetMathLibrary::ClampAngle(Rotator.Pitch, -LookUpLimit, LookUpLimit);
+			// CameraBoom->SetRelativeRotation(FRotator(0.0f, Pitch, Rotator.Yaw));
 		}
 	}
 
@@ -110,7 +111,7 @@ void ACubeGameCharacterBase::AxisAngleBetween(FVector A, FVector B, FVector& Axi
 	}
 	else
 	{
-		if (FMath::IsNearlyEqual(FMath::Abs(Degree), 180, 0.1f))
+		if (FMath::IsNearlyEqual(FMath::Abs(Degree), 180.0f, 0.1f))
 		{
 			if (FMath::IsNearlyEqual(FMath::Abs(A.X), 1.0))
 			{
@@ -119,13 +120,13 @@ void ACubeGameCharacterBase::AxisAngleBetween(FVector A, FVector B, FVector& Axi
 			}
 			else
 			{
-				Axis = FVector::CrossProduct(A, FVector(1,0,0));
+				Axis = FVector::CrossProduct(A, FVector(1,0,0)).GetSafeNormal();
 				Angle = Degree;
 			}
 		}
 		else
 		{
-			Axis = FVector::CrossProduct(A, B);
+			Axis = FVector::CrossProduct(A, B).GetSafeNormal();
 			Angle = Degree;
 		}
 	}

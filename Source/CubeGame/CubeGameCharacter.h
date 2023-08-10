@@ -7,6 +7,16 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "CubeGameCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum EShapeType
+{
+	Cube=0		UMETA(DisplayName="Cube"),
+	Sphere		UMETA(DisplayName="Sphere"),
+	Plane		UMETA(DisplayName="Plane"),
+	Fly			UMETA(DisplayName="Fly"),
+
+	SHAPE_TYPE_COUNT
+};
 
 UCLASS(config=Game)
 class ACubeGameCharacter : public ACubeMountCharacter
@@ -134,7 +144,8 @@ public:
 
 	bool bIsInWindField = false;
 
-	bool bIsSphere = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DeltaRotateAngle = 2.5f;
 
 protected:
 	UFUNCTION()
@@ -181,6 +192,8 @@ protected:
 	void RotateForward(float Value);
 
 	void RotateRight(float Value);
+
+	EShapeType CubeState;
 	
 	bool bPreventInput;
 
