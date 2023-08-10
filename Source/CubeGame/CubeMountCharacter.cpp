@@ -224,9 +224,11 @@ void ACubeMountCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACubeMountCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACubeMountCharacter::MoveRight);
 	
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-
+	// PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	// PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ACubeGameCharacterBase::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &ACubeGameCharacterBase::LookUp);
+	
 	PlayerInputComponent->BindAction("ZoomIn", IE_Pressed, this, &ACubeMountCharacter::ZoomIn);
 	PlayerInputComponent->BindAction("ZoomOut", IE_Pressed, this, &ACubeMountCharacter::ZoomOut);
 

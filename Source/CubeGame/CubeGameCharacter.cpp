@@ -3,6 +3,7 @@
 #include "CubeGameCharacter.h"
 
 #include "CubeAnimInstance.h"
+#include "GravityVolumeBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -179,8 +180,12 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACubeGameCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACubeGameCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ACubeGameCharacterBase::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &ACubeGameCharacterBase::LookUp);
+	// PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	// PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("RotateForward", this, &ACubeGameCharacter::RotateForward);
+	PlayerInputComponent->BindAxis("RotateRight", this, &ACubeGameCharacter::RotateRight);
 	
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACubeGameCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
@@ -309,7 +314,8 @@ void ACubeGameCharacter::MoveForward(float Value)
 		{
 			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			FVector Direction = GetCameraBoom()->GetRightVector();
 
 			if (GetMesh()->IsSimulatingPhysics())
 			{
@@ -370,7 +376,9 @@ void ACubeGameCharacter::MoveRight(float Value)
 		{
 			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			FVector Direction = GetCameraBoom()->GetForwardVector();
+
 
 			if (GetMesh()->IsSimulatingPhysics())
 			{
@@ -686,11 +694,26 @@ void ACubeGameCharacter::ToFly()
 	}
 }
 
-void ACubeGameCharacter::ChangeGravityDirection()
+void ACubeGameCharacter::RotateForward(float Value)
+{
+	TArray<AActor*> OverlappingActors;
+	GetCapsuleComponent()->GetOverlappingActors(OverlappingActors);
+	for (auto& Actor: OverlappingActors)
+	{
+		if (AGravityVolumeBase* GravityVolume= Cast<AGravityVolumeBase>(Actor))
+		{
+			if (GravityVolume->bCanRotate)
+			{
+				
+			}
+		}
+	}
+}
+
+void ACubeGameCharacter::RotateRight(float Value)
 {
 	
 }
-
 
 
 

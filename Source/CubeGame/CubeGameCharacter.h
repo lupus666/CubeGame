@@ -178,7 +178,9 @@ protected:
 
 	void ToFly();
 
-	void ChangeGravityDirection();
+	void RotateForward(float Value);
+
+	void RotateRight(float Value);
 	
 	bool bPreventInput;
 
