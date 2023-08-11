@@ -15,7 +15,11 @@ UCLASS(Blueprintable)
 class CUBEGAME_API UWindComponent : public USphereComponent
 {
 	GENERATED_BODY()
-	
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float StaticSurfaceArea;
+
 protected:
 	virtual void BeginPlay() override;
 

@@ -4,6 +4,7 @@
 #include "WindField.h"
 
 #include "CubeGameCharacter.h"
+#include "WindComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -72,7 +73,7 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			const FBox Bounds = CubeGameCharacter->GetMesh()->Bounds.GetBox();
 			constexpr float CaptureDistance = 80.0f;
 			const FVector GravityCenter = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
-			const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection.Vector()) * CaptureDistance;
+			const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
 			
 			//TODO shadowmap
 			UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
@@ -81,7 +82,7 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			SceneCaptureComponent2D->TextureTarget = RTDepthMap;
 			SceneCaptureComponent2D->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
 			SceneCaptureComponent2D->SetWorldLocation(CaptureLocation);
-			SceneCaptureComponent2D->SetWorldRotation(WindDirection);
+			SceneCaptureComponent2D->SetWorldRotation(WindDirection.Rotation());
 			SceneCaptureComponent2D->CaptureScene();
 
 			//TODO performance optimization
@@ -156,7 +157,20 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 	{
 		if (FBodyInstance* BodyInstance = StaticMesh->GetBodyInstance())
 		{
-			const float SurfaceArea = CalcSurfaceArea(BodyInstance);
+			float SurfaceArea = 0.0;
+			//TODO GetMeshTriangleArea
+			
+			SurfaceArea = CalcSurfaceArea(BodyInstance);
+			if (SurfaceArea == 0.0f)
+			{
+				if (UWindComponent* WindComponent = Actor->GetComponentByClass<UWindComponent>())
+				{
+					if (WindComponent->StaticSurfaceArea != 0.0)
+					{
+						SurfaceArea = WindComponent->StaticSurfaceArea;
+					}
+				}
+			}
 			const FVector Force = CalcWindLoad(SurfaceArea);
 			BodyInstance->AddForce(Force);
 		}
@@ -166,7 +180,7 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 FVector AWindField::CalcWindLoad(float WindSurfaceArea)
 {
 	const float rho = 1.204;
-	return 0.5* rho * WindSurfaceArea* UKismetMathLibrary::Normal(UKismetMathLibrary::GetForwardVector(WindDirection)) * WindStrength * WindStrength;
+	return 0.5* rho * WindSurfaceArea* UKismetMathLibrary::Normal(WindDirection) * WindStrength * WindStrength;
 }
 
 TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
@@ -184,29 +198,35 @@ TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
 
 float AWindField::CalcSurfaceArea(FBodyInstance* BodyInstance)
 {
-	float BaseArea;
 	if (BodyInstance->GetBodySetup()->AggGeom.BoxElems.Num())
 	{
-		BaseArea = pow(BodyInstance->GetBodySetup()->AggGeom.BoxElems[0].X*0.01, 2);
+		float BaseArea = pow(BodyInstance->GetBodySetup()->AggGeom.BoxElems[0].X*0.01, 2);
+		float TotalArea = 0;
+		for (auto& Normal: GetCubeNormals(UKismetMathLibrary::GetForwardVector(BodyInstance->GetUnrealWorldTransform().Rotator())))
+		{
+			float DotProduct = FVector::DotProduct(WindDirection, Normal);
+			if (DotProduct > 0.0f)
+			{
+				continue;
+			}
+			else
+			{
+				TotalArea += BaseArea * -DotProduct/(WindDirection.Size());
+			}
+		}
+		return TotalArea;
+	}
+	else if(BodyInstance->GetBodySetup()->AggGeom.SphereElems.Num())
+	{
+		float BaseArea = UE_PI*pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2);
+		return BaseArea;
 	}
 	else
 	{
-		BaseArea = UE_PI*pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2);
+		
+		return 0;
 	}
-	float TotalArea = 0;
-	for (auto& Normal: GetCubeNormals(UKismetMathLibrary::GetForwardVector(BodyInstance->GetUnrealWorldTransform().Rotator())))
-	{
-		float DotProduct = FVector::DotProduct(WindDirection.Vector(), Normal);
-		if (DotProduct > 0.0f)
-		{
-			continue;
-		}
-		else
-		{
-			TotalArea += BaseArea * -DotProduct/(WindDirection.Vector().Size());
-		}
-	}
-	return TotalArea;
+	
 	
 }
 
@@ -231,14 +251,30 @@ void AWindField::Tick(float DeltaTime)
 		WindStrength = WindSpeed * StrengthMultiplier;
 	}
 
-	//Apply Force
-	for (AActor* Actor: WindFieldActors)
+	if (BoxComponent)
 	{
-		if (IsValid(Actor))
+		TArray<AActor*> OverlappingActors;
+		BoxComponent->GetOverlappingActors(OverlappingActors);
+		for (auto& Actor : OverlappingActors)
 		{
-			ApplyWindEffect(Actor);
+			if (IsValid(Actor))
+			{
+				if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
+				{
+					ApplyWindEffect(Actor);
+				}
+			}
 		}
 	}
+	
+	//Apply Force
+	// for (AActor* Actor: WindFieldActors)
+	// {
+	// 	if (IsValid(Actor))
+	// 	{
+	// 		ApplyWindEffect(Actor);
+	// 	}
+	// }
 
 	CurveTime += DeltaTime;
 }

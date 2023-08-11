@@ -84,6 +84,9 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCubeAnimInstance* AnimInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UMaterialParameterCollection* MaterialParameterCollection;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyName = "Pelvis";
@@ -192,6 +195,8 @@ protected:
 	void RotateForward(float Value);
 
 	void RotateRight(float Value);
+
+	void UpdateMaterialCollection();
 
 	EShapeType CubeState;
 	

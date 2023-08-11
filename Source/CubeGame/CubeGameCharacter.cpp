@@ -12,10 +12,13 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "InputCoreTypes.h"
 #include "WindField.h"
+#include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Materials/MaterialParameterCollection.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 
@@ -66,13 +69,13 @@ void ACubeGameCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	PhysicalAnimationComponent->SetStrengthMultiplyer(CurrentRelaxRate);
-
+	UpdateMaterialCollection();
 	if (!GetMesh()->IsSimulatingPhysics(BodyName))
 	{
 		// GetMesh()->SetWorldLocation(UKismetMathLibrary::VectorSpringInterp(GetMesh()->GetComponentLocation(),
-		// 	GetCharacterMovement()->GetActorLocation() + FVector(0, 0, 3.0f), MovementSpring, 10, 1, DeltaSeconds));
+		// GetCharacterMovement()->GetActorLocation() + FVector(0, 0, 3.0f), MovementSpring, 10, 1, DeltaSeconds));
 		// GetMesh()->SetWorldLocation(GetCharacterMovement()->GetActorLocation());
-		GetMesh()->AddWorldOffset(GetCharacterMovement()->Velocity*DeltaSeconds);
+		GetMesh()->AddWorldOffset((GetCapsuleComponent()->GetComponentLocation() - GetMesh()->GetComponentLocation()) * DeltaSeconds, false);
 	}
 	else
 	{
@@ -314,9 +317,6 @@ void ACubeGameCharacter::MoveForward(float Value)
 		// if (bIsSphere)
 		if (Controller && abs(ForwardValue - 0.0) > UE_SMALL_NUMBER)
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			FVector Direction = GetCameraBoom()->GetRightVector();
 
 			if (GetMesh()->IsSimulatingPhysics())
@@ -346,8 +346,15 @@ void ACubeGameCharacter::MoveForward(float Value)
 			}
 			else
 			{
+				// const FRotator Rotation = Controller->GetControlRotation();
+				const FRotator Rotation = GetCameraBoom()->GetComponentRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
 				Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-				AddMovementInput(Direction, ForwardValue);
+				// AddMovementInput(Direction, ForwardValue);
+				GetCapsuleComponent()->AddWorldOffset(ForwardValue*Direction*GetCharacterMovement()->MaxWalkSpeed*GetWorld()->GetDeltaSeconds());
+				// UKismetSystemLibrary::PrintString(this, Direction.ToString());
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(ForwardValue));
+
 			}
 		}
 		else
@@ -376,9 +383,6 @@ void ACubeGameCharacter::MoveRight(float Value)
 		// if (bIsSphere)
 		if (Controller && abs(RightValue - 0.0) > UE_SMALL_NUMBER)
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			// FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 			FVector Direction = GetCameraBoom()->GetForwardVector();
 
 
@@ -410,8 +414,11 @@ void ACubeGameCharacter::MoveRight(float Value)
 			}
 			else
 			{
+				const FRotator Rotation = GetCameraBoom()->GetComponentRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
 				Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-				AddMovementInput(Direction, RightValue);
+				GetCapsuleComponent()->AddWorldOffset(RightValue*Direction*GetCharacterMovement()->MaxWalkSpeed*GetWorld()->GetDeltaSeconds());
+				// AddMovementInput(Direction, RightValue);
 			}
 		}
 		else
@@ -434,18 +441,10 @@ void ACubeGameCharacter::MoveRight(float Value)
 void ACubeGameCharacter::UpdateRootMovement(float DeltaSeconds)
 {
 	FVector TargetLocation = GetMesh()->GetComponentLocation();
-	// UKismetSystemLibrary::PrintString(this, TargetLocation.ToString());
-
 	FVector CurrentLocation = GetActorLocation();
 	RootMovementSpring.bPrevTargetValid = false;
-	// UKismetSystemLibrary::PrintString(this, CurrentLocation.ToString());
-
 	CurrentLocation = UKismetMathLibrary::VectorSpringInterp(CurrentLocation, TargetLocation, RootMovementSpring, 20, 1, DeltaSeconds);
-	// UKismetSystemLibrary::PrintString(this, CurrentLocation.ToString());
-
-	
 	SetActorLocation(CurrentLocation, false);
-	// GetCapsuleComponent()->SetWorldLocation(CurrentLocation, false);
 }
 
 void ACubeGameCharacter::BeginSprint()
@@ -531,7 +530,7 @@ void ACubeGameCharacter::Landed(const FHitResult& Hit)
 
 void ACubeGameCharacter::BeginTighten()
 {
-	if (!bPreventInput)
+	if (!bPreventInput && GetMesh()->IsSimulatingPhysics())
 	{
 		ACubeMountCharacter::BeginTighten();
 	}
@@ -782,6 +781,18 @@ void ACubeGameCharacter::RotateRight(float Value)
 				}
 			}
 		}
+	}
+}
+
+void ACubeGameCharacter::UpdateMaterialCollection()
+{
+	if (MaterialParameterCollection)
+	{
+		FVector PlayerToCamera = GetFollowCamera()->GetComponentLocation() - GetMesh()->GetComponentLocation();
+		FVector PlayerPosition = GetMesh()->GetComponentLocation();
+		const FBoxSphereBounds Bounds = GetMesh()->Bounds;
+		UKismetMaterialLibrary::SetVectorParameterValue(this, MaterialParameterCollection, FName("PlayerToCamera"), FLinearColor(PlayerToCamera.X, PlayerToCamera.Y, PlayerToCamera.Z));
+		UKismetMaterialLibrary::SetVectorParameterValue(this, MaterialParameterCollection, FName("PlayerPosition"), FLinearColor(PlayerPosition.X, PlayerPosition.Y, PlayerPosition.Z));
 	}
 }
 

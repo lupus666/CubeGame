@@ -20,7 +20,7 @@ public:
 	UBoxComponent* BoxComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FRotator WindDirection;
+	FVector WindDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USceneCaptureComponent2D* SceneCaptureComponent2D;
