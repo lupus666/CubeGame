@@ -75,7 +75,6 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			const FVector GravityCenter = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
 			const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
 			
-			//TODO shadowmap
 			UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
 			SceneCaptureComponent2D->ShowOnlyActors.Empty();
 			SceneCaptureComponent2D->ShowOnlyActors.Add(Actor);
@@ -144,13 +143,13 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			CubeGameCharacter->GetMesh()->AddForce(TotalForce);
 			CubeGameCharacter->GetMesh()->AddTorqueInRadians(TotalTorque);
 
-			UKismetSystemLibrary::PrintString(this, TextureSize.ToString());
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_IntToString(PixelCount));
-			UKismetSystemLibrary::PrintString(this, TotalR.ToString());
-			UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
-			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
-			UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
-			UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
+			// UKismetSystemLibrary::PrintString(this, TextureSize.ToString());
+			// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_IntToString(PixelCount));
+			// UKismetSystemLibrary::PrintString(this, TotalR.ToString());
+			// UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
+			// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
+			// UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
+			// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 		}
 	}
 	else if (UStaticMeshComponent* StaticMesh = Actor->GetComponentByClass<UStaticMeshComponent>())
@@ -180,7 +179,7 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 FVector AWindField::CalcWindLoad(float WindSurfaceArea)
 {
 	const float rho = 1.204;
-	return 0.5* rho * WindSurfaceArea* UKismetMathLibrary::Normal(WindDirection) * WindStrength * WindStrength;
+	return 0.5* rho * WindSurfaceArea* WindDirection.GetSafeNormal() * WindStrength * WindStrength;
 }
 
 TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
@@ -266,15 +265,6 @@ void AWindField::Tick(float DeltaTime)
 			}
 		}
 	}
-	
-	//Apply Force
-	// for (AActor* Actor: WindFieldActors)
-	// {
-	// 	if (IsValid(Actor))
-	// 	{
-	// 		ApplyWindEffect(Actor);
-	// 	}
-	// }
 
 	CurveTime += DeltaTime;
 }

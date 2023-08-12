@@ -5,11 +5,8 @@
 
 #include "CubeGameCharacter.h"
 #include "CyberCube.h"
-#include "BaseGizmos/GizmoElementArrow.h"
 #include "Components/CapsuleComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
-#include "GameFramework/PawnMovementComponent.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values

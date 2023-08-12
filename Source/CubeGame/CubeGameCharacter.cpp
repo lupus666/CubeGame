@@ -14,6 +14,7 @@
 #include "WindField.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
+#include "CubeAbilityBlackHole.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -210,6 +211,8 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("ToCube", IE_Pressed, this, &ACubeGameCharacter::ToCube);
 	PlayerInputComponent->BindAction("ToPlane", IE_Pressed, this, &ACubeGameCharacter::ToPlane);
 	PlayerInputComponent->BindAction("ToFly", IE_Pressed, this, &ACubeGameCharacter::ToFly);
+
+	PlayerInputComponent->BindAction("BlackHole", IE_Released, this, &ACubeGameCharacter::BlackHole);
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -795,6 +798,44 @@ void ACubeGameCharacter::UpdateMaterialCollection()
 		UKismetMaterialLibrary::SetVectorParameterValue(this, MaterialParameterCollection, FName("PlayerPosition"), FLinearColor(PlayerPosition.X, PlayerPosition.Y, PlayerPosition.Z));
 	}
 }
+
+void ACubeGameCharacter::BlackHole()
+{
+	// if (IsValid(AbilityBlackHole))
+	// {
+	// 	Destroy(AbilityBlackHole);
+	// }
+	// else
+	// {
+	// 	AbilityBlackHole = GetWorld()->SpawnActor<ACubeAbilityBlackHole>(ACubeAbilityBlackHole::StaticClass(), FTransform(GetActorLocation()), FActorSpawnParameters(this));
+	// }
+}
+
+void ACubeGameCharacter::DilationDefense()
+{
+}
+
+void ACubeGameCharacter::Grab()
+{
+}
+
+void ACubeGameCharacter::Throw()
+{
+}
+
+void ACubeGameCharacter::Shoot()
+{
+}
+
+void ACubeGameCharacter::RadialImpulse()
+{
+}
+
+void ACubeGameCharacter::RadialMagnetic()
+{
+}
+
+
 
 
 

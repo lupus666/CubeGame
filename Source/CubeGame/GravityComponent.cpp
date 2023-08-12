@@ -3,12 +3,7 @@
 
 #include "GravityComponent.h"
 
-#include "CubeAnimInstance.h"
 #include "CubeGameCharacter.h"
-#include "BaseGizmos/GizmoElementArrow.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values for this component's properties
 UGravityComponent::UGravityComponent()

@@ -127,6 +127,7 @@ void ACubeMountCharacter::TimeDilation()
 void ACubeMountCharacter::OnDilationTimelineTick(float Value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, Value);
+	CustomTimeDilation = 1.0;
 }
 
 void ACubeMountCharacter::BeginTighten()

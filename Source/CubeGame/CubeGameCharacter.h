@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+// #include "CubeAbilityBlackHole.h"
 #include "CubeMountCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "CubeGameCharacter.generated.h"
@@ -198,6 +199,20 @@ protected:
 
 	void UpdateMaterialCollection();
 
+	void BlackHole();
+
+	void DilationDefense();
+
+	void Grab();
+
+	void Throw();
+
+	void Shoot();
+
+	void RadialImpulse();
+
+	void RadialMagnetic();
+	
 	EShapeType CubeState;
 	
 	bool bPreventInput;
@@ -247,6 +262,9 @@ protected:
 	FFloatSpringState SphereForwardSpring;
 
 	FVectorSpringState RootMovementSpring;
+
+	// UPROPERTY()
+	// ACubeAbilityBlackHole* AbilityBlackHole;
 
 public:
 	FVector GetMountLocation() const;
