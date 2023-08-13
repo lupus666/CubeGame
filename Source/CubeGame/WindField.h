@@ -72,9 +72,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	FVector CalcWindLoad(float WindSurfaceArea);
+	float CalcWindLoadByArea(float WindSurfaceArea) const;
 
 	static TArray<FVector> GetCubeNormals(const FVector& ForwardVector);
 
-	float CalcSurfaceArea(FBodyInstance* BodyInstance);
+	FVector CalcWindForceByBodyInstance(FBodyInstance* BodyInstance) const;
+
+	FVector CalcWindForceByRenderTarget();
 };

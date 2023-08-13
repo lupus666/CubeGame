@@ -67,8 +67,9 @@ void AWindField::AddWindLoad(AActor* Actor)
 				if (FBodyInstance* BodyInstance = SkeletalMesh->GetBodyInstance(BoneName))
 				{
 				
-					const float SurfaceArea = CalcSurfaceArea(BodyInstance);
-					const FVector Force = CalcWindLoad(SurfaceArea);
+					// const float SurfaceArea = CalcWindLoadByBodyInstance(BodyInstance);
+					// const FVector Force = CalcWindLoadByArea(SurfaceArea);
+					const FVector Force = CalcWindForceByBodyInstance(BodyInstance);
 					BodyInstance->AddForce(Force);
 				}
 			}
@@ -101,11 +102,17 @@ void AWindField::AddWindLoad(AActor* Actor)
 			SceneCaptureNormal->CaptureScene();
 			
 			//TODO performance optimization
-			FRenderTarget* RenderTarget = RTDepthMap->GameThread_GetRenderTargetResource();
-			TArray<FColor> Pixels;
+			FRenderTarget* RenderTargetDepth = RTDepthMap->GameThread_GetRenderTargetResource();
+			TArray<FColor> PixelsDepth;
 			FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
-			RenderTarget->ReadPixels(Pixels, ReadPixelFlags);
-			const FIntPoint TextureSize = RenderTarget->GetSizeXY();
+			RenderTargetDepth->ReadPixels(PixelsDepth, ReadPixelFlags);
+
+			FRenderTarget* RenderTargetNormal = RTDepthMap->GameThread_GetRenderTargetResource();
+			TArray<FColor> PixelsNormal;
+			RenderTargetNormal->ReadPixels(PixelsNormal, ReadPixelFlags);
+
+
+			const FIntPoint TextureSize = RenderTargetDepth->GetSizeXY();
 			
 			// FMatrix ViewRotationMatrix = FLookAtMatrix(CaptureLocation, GravityCenter, UKismetMathLibrary::GetUpVector(WindDirection));
 			// FMatrix ProjectionMatrix = FReversedZOrthoMatrix(SceneCaptureComponent2D->OrthoWidth/2.0f,SceneCaptureComponent2D->OrthoWidth/2.0f, 2.0f/WORLD_MAX, WORLD_MAX);
@@ -129,7 +136,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 			{
 				for (int j = 0; j < TextureSize.Y; j++)
 				{
-					if (Pixels[i * TextureSize.Y + j] != FColor::Black)
+					if (PixelsDepth[i * TextureSize.Y + j] != FColor::Black)
 					{
 						PixelCount += 1;
 						TotalR += FVector(i + 0.5 - TextureSize.X/2.0f, j + 0.5 - TextureSize.Y/2.0f, 0);
@@ -154,7 +161,10 @@ void AWindField::AddWindLoad(AActor* Actor)
 			FVector RVector = -TotalR.X * PixelX * UpVector + TotalR.Y * PixelY * RightVector;
 			const float SurfaceArea = PixelCount * PixelArea;
 
-			const FVector TotalForce = CalcWindLoad(SurfaceArea);
+			//TODO fix
+			const FVector TotalForce = CalcWindLoadByArea(SurfaceArea);
+
+			//TODO deduce
 			const FVector TotalTorque = UKismetMathLibrary::Cross_VectorVector(RVector, TotalForce);
 			CubeGameCharacter->GetMesh()->AddForce(TotalForce);
 			CubeGameCharacter->GetMesh()->AddTorqueInRadians(TotalTorque);
@@ -172,21 +182,20 @@ void AWindField::AddWindLoad(AActor* Actor)
 	{
 		if (FBodyInstance* BodyInstance = StaticMesh->GetBodyInstance())
 		{
-			float SurfaceArea = 0.0;
+			FVector Force;
 			//TODO GetMeshTriangleArea
 			
-			SurfaceArea = CalcSurfaceArea(BodyInstance);
-			if (SurfaceArea == 0.0f)
+			Force = CalcWindForceByBodyInstance(BodyInstance);
+			if (Force == FVector(0, 0, 0))
 			{
 				if (UWindComponent* WindComponent = Actor->GetComponentByClass<UWindComponent>())
 				{
 					if (WindComponent->StaticSurfaceArea != 0.0)
 					{
-						SurfaceArea = WindComponent->StaticSurfaceArea;
+						Force = CalcWindLoadByArea(WindComponent->StaticSurfaceArea) * WindDirection;
 					}
 				}
 			}
-			const FVector Force = CalcWindLoad(SurfaceArea);
 			BodyInstance->AddForce(Force);
 		}
 	}
@@ -194,13 +203,13 @@ void AWindField::AddWindLoad(AActor* Actor)
 
 void AWindField::CaptureDepthNormal()
 {
-	
+
 }
 
-FVector AWindField::CalcWindLoad(float WindSurfaceArea)
+float AWindField::CalcWindLoadByArea(float WindSurfaceArea) const
 {
 	const float rho = 1.204;
-	return 0.5* rho * WindSurfaceArea* WindDirection.GetSafeNormal() * WindStrength * WindStrength;
+	return 0.5 * rho * WindSurfaceArea * WindStrength * WindStrength;
 }
 
 TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
@@ -216,38 +225,40 @@ TArray<FVector> AWindField::GetCubeNormals(const FVector& ForwardVector)
 	return CubeNormals;
 }
 
-float AWindField::CalcSurfaceArea(FBodyInstance* BodyInstance)
+FVector AWindField::CalcWindForceByBodyInstance(FBodyInstance* BodyInstance) const
 {
 	if (BodyInstance->GetBodySetup()->AggGeom.BoxElems.Num())
 	{
 		float BaseArea = pow(BodyInstance->GetBodySetup()->AggGeom.BoxElems[0].X*0.01, 2);
-		float TotalArea = 0;
+		FVector Force = FVector(0, 0, 0);
 		for (auto& Normal: GetCubeNormals(UKismetMathLibrary::GetForwardVector(BodyInstance->GetUnrealWorldTransform().Rotator())))
 		{
-			float DotProduct = FVector::DotProduct(WindDirection, Normal);
-			if (DotProduct > 0.0f)
+			float DotProduct = FVector::DotProduct(WindDirection.GetSafeNormal(), Normal);
+			if (DotProduct < 0.0f)
 			{
-				continue;
+				Force += CalcWindLoadByArea(BaseArea * -DotProduct) * -DotProduct * -Normal;
+				// TotalArea += BaseArea * -DotProduct/(WindDirection.Size());
 			}
-			else
-			{
-				TotalArea += BaseArea * -DotProduct/(WindDirection.Size());
-			}
+				
 		}
-		return TotalArea;
+		return Force;
 	}
 	else if(BodyInstance->GetBodySetup()->AggGeom.SphereElems.Num())
 	{
-		float BaseArea = UE_PI*pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2);
-		return BaseArea;
+		return CalcWindLoadByArea(UE_PI *pow(BodyInstance->GetBodySetup()->AggGeom.SphereElems[0].Radius*0.01, 2)) * WindDirection.GetSafeNormal();
 	}
 	else
 	{
 		
-		return 0;
+		return FVector(0, 0, 0);
 	}
 	
 	
+}
+
+FVector AWindField::CalcWindForceByRenderTarget()
+{
+
 }
 
 // Called every frame
