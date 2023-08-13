@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "CubeAbilityBlackHole.h"
 #include "CubeMountCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "CubeGameCharacter.generated.h"
@@ -263,8 +262,17 @@ protected:
 
 	FVectorSpringState RootMovementSpring;
 
-	// UPROPERTY()
-	// ACubeAbilityBlackHole* AbilityBlackHole;
+	UPROPERTY()
+	class ACubeAbilityBlackHole* AbilityBlackHole;
+
+	UPROPERTY()
+	class ACubeAbilityGrab* AbilityGrab;
+
+	UPROPERTY()
+	class ACubeAbilityShoot* AbilityShoot;
+
+	UPROPERTY()
+	class ACubeAbilityDilationDefense* AbilityDilationDefense;
 
 public:
 	FVector GetMountLocation() const;

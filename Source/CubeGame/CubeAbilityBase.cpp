@@ -3,7 +3,6 @@
 
 #include "CubeAbilityBase.h"
 
-#include "CubeGameCharacter.h"
 #include "GravityVolumeBase.h"
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -19,7 +18,7 @@ ACubeAbilityBase::ACubeAbilityBase()
 
 void ACubeAbilityBase::Initialize(ACubeGameCharacter* Character)
 {
-	this->CubeGameCharacter = CubeGameCharacter;
+	this->CubeGameCharacter = Character;
 }
 
 // Called when the game starts or when spawned
@@ -94,7 +93,7 @@ void ACubeAbilityBase::AddForceToward(AActor* Actor, FVector TargetForce, float 
 		GetTargetVelocity(Actor, LinearVelocity, AngularVelocity);
 		const FVector Force = (TargetForce - Actor->GetActorLocation() - LinearVelocity) * LinearStiffness;
 		const FVector Torque = AngularVelocity * -AngularDamper;
-		AddForce(Actor, Force, Torque, false);
+		AddForce(Actor, Force, Torque, true);
 	}
 }
 

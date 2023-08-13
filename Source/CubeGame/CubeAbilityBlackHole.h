@@ -31,7 +31,7 @@ public:
 	float MinMaxTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Strength = 1500.0f;
+	float Strength = 15000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float StrengthExponent = 2.f;
@@ -59,6 +59,4 @@ protected:
 
 public:
 	virtual void Tick(float DeltaSeconds) override;
-
-	virtual void Initialize(ACubeGameCharacter* Character) override;
 };

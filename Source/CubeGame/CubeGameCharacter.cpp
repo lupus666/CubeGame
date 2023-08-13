@@ -15,6 +15,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "CubeAbilityBlackHole.h"
+#include "CubeAbilityGrab.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -213,6 +214,7 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("ToFly", IE_Pressed, this, &ACubeGameCharacter::ToFly);
 
 	PlayerInputComponent->BindAction("BlackHole", IE_Released, this, &ACubeGameCharacter::BlackHole);
+	PlayerInputComponent->BindAction("Target", IE_Released, this, &ACubeGameCharacter::Grab);
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -801,14 +803,18 @@ void ACubeGameCharacter::UpdateMaterialCollection()
 
 void ACubeGameCharacter::BlackHole()
 {
-	// if (IsValid(AbilityBlackHole))
-	// {
-	// 	Destroy(AbilityBlackHole);
-	// }
-	// else
-	// {
-	// 	AbilityBlackHole = GetWorld()->SpawnActor<ACubeAbilityBlackHole>(ACubeAbilityBlackHole::StaticClass(), FTransform(GetActorLocation()), FActorSpawnParameters(this));
-	// }
+	if (IsValid(AbilityBlackHole))
+	{
+		AbilityBlackHole->Destroy();
+		AbilityBlackHole = nullptr;
+	}
+	else
+	{
+		AbilityBlackHole = Cast<ACubeAbilityBlackHole>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityBlackHole::StaticClass(), FTransform(GetActorLocation())));
+		AbilityBlackHole->Initialize(this);
+		UGameplayStatics::FinishSpawningActor(AbilityBlackHole, FTransform(GetActorLocation()));
+	}
 }
 
 void ACubeGameCharacter::DilationDefense()
@@ -817,6 +823,26 @@ void ACubeGameCharacter::DilationDefense()
 
 void ACubeGameCharacter::Grab()
 {
+	if (IsValid(AbilityGrab))
+	{
+		if (IsValid(AbilityGrab->GetGrabTarget()))
+		{
+			AbilityGrab->ReleaseGrabTarget();
+			AbilityGrab->Destroy();
+			AbilityGrab = nullptr;
+		}
+		else
+		{
+			AbilityGrab->FindGrabTarget();
+		}
+	}
+	else
+	{
+		AbilityGrab = Cast<ACubeAbilityGrab>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityGrab::StaticClass(), FTransform(GetActorLocation())));
+		AbilityGrab->Initialize(this);
+		UGameplayStatics::FinishSpawningActor(AbilityGrab, FTransform(GetActorLocation()));
+	}
 }
 
 void ACubeGameCharacter::Throw()

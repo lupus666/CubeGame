@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CubeAbilityBlackHole.h"
+#include "CubeGameCharacter.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 ACubeAbilityBlackHole::ACubeAbilityBlackHole()
@@ -38,8 +39,8 @@ void ACubeAbilityBlackHole::PullTowardsCenter()
 				const FVector Direction = (GetActorLocation() - Actor->GetActorLocation()).GetSafeNormal();
 				const float StrengthMultiplier = FMath::Pow(1 - GetDistanceTo(Actor) / Radius, StrengthExponent);
 				const FVector Force = Direction * Strength * StrengthMultiplier;
-
-				AddForce(Actor, Force, FVector(0,0,0), false);
+				UKismetSystemLibrary::PrintString(this, Force.ToString());
+				AddForce(Actor, Force, FVector(0,0,0), true);
 			}
 		}
 	}
@@ -77,20 +78,4 @@ void ACubeAbilityBlackHole::Tick(float DeltaSeconds)
 	SphereComponent->SetSphereRadius(FMath::Lerp(MinRadius, MaxRadius, CurrentTime/MinMaxTime), true);
 	
 	PullTowardsCenter();
-}
-
-void ACubeAbilityBlackHole::Initialize(ACubeGameCharacter* Character)
-{
-	Super::Initialize(Character);
-
-	if (CubeGameCharacter)
-	{
-		FVector CameraLocation = CubeGameCharacter->GetFollowCamera()->GetComponentLocation();
-		FVector CameraForwardVector = CubeGameCharacter->GetFollowCamera()->GetForwardVector();
-		SetActorLocation(SpawnDistance * CameraForwardVector + CameraLocation);
-		SphereComponent->SetSphereRadius(MinRadius);
-		SphereComponent->SetHiddenInGame(true);
-		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACubeAbilityBlackHole::OnBeginOverlapping);
-		SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ACubeAbilityBlackHole::OnEndOverlapping);
-	}
 }

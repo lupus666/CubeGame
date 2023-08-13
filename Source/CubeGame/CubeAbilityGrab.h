@@ -30,7 +30,7 @@ public:
 	float HoldDistance = 500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bConsiderVelocity = false;
+	bool bConsiderVelocity = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrowDistance = 1500.0f;
@@ -60,5 +60,4 @@ public:
 	
 	virtual void Tick(float DeltaSeconds) override;
 
-	virtual void Initialize(ACubeGameCharacter* Character) override;
 };

@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CubeAbilityDilationDefense.h"
+#include "CubeGameCharacter.h"
+
 
 ACubeAbilityDilationDefense::ACubeAbilityDilationDefense()
 {
@@ -27,17 +28,6 @@ void ACubeAbilityDilationDefense::Tick(float DeltaSeconds)
 	DilationDefense();
 }
 
-void ACubeAbilityDilationDefense::Initialize(ACubeGameCharacter* Character)
-{
-	Super::Initialize(Character);
-
-	if (CubeGameCharacter)
-	{
-		SetActorLocation(CubeGameCharacter->GetMesh()->GetComponentLocation());
-		SphereComponent->SetSphereRadius(DefenseRadius, true);
-		SphereComponent->SetHiddenInGame(true);
-	}
-}
 
 void ACubeAbilityDilationDefense::DilationDefense()
 {

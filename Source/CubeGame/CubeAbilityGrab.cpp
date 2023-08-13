@@ -2,7 +2,7 @@
 
 
 #include "CubeAbilityGrab.h"
-#include "Camera/CameraComponent.h"
+#include "CubeGameCharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACubeAbilityGrab::ACubeAbilityGrab()
@@ -123,8 +123,3 @@ void ACubeAbilityGrab::Tick(float DeltaSeconds)
 	}
 }
 
-void ACubeAbilityGrab::Initialize(ACubeGameCharacter* Character)
-{
-	Super::Initialize(Character);
-	
-}

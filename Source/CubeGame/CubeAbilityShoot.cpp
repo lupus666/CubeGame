@@ -2,7 +2,7 @@
 
 
 #include "CubeAbilityShoot.h"
-
+#include "CubeGameCharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACubeAbilityShoot::ACubeAbilityShoot()
@@ -95,11 +95,6 @@ void ACubeAbilityShoot::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	SuctionTarget();
-}
-
-void ACubeAbilityShoot::Initialize(ACubeGameCharacter* Character)
-{
-	Super::Initialize(Character);
 }
 
 void ACubeAbilityShoot::AddTarget(AActor* Actor)

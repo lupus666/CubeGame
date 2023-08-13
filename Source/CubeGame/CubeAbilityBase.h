@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "CubeGameCharacter.h"
 #include "CubeAbilityBase.generated.h"
 
 UCLASS()
@@ -19,7 +18,7 @@ public:
 	ACubeAbilityBase();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	ACubeGameCharacter* CubeGameCharacter;
+	class ACubeGameCharacter* CubeGameCharacter;
 	
 protected:
 	// Called when the game starts or when spawned
