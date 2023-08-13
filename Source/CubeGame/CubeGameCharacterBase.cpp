@@ -181,13 +181,13 @@ void ACubeGameCharacterBase::MoveRight(float Value)
 void ACubeGameCharacterBase::ZoomIn()
 {
 	CameraBoom->TargetArmLength = UKismetMathLibrary::Clamp(CameraBoom->TargetArmLength - 20.0f, 90.0f, 1000.0f);
-	CameraBoom->SetRelativeLocation(FVector(0, 0, 10));
+	// CameraBoom->SetRelativeLocation(FVector(0, 0, 10));
 }
 
 void ACubeGameCharacterBase::ZoomOut()
 {
 	CameraBoom->TargetArmLength = UKismetMathLibrary::Clamp(CameraBoom->TargetArmLength + 20.0f, 90.0f, 1000.0f);
-	CameraBoom->SetRelativeLocation(FVector(0, 0, 10));
+	// CameraBoom->SetRelativeLocation(FVector(0, 0, 10));
 }
 
 void ACubeGameCharacterBase::Turn(float Value)

@@ -27,19 +27,19 @@ public:
 	float GrabRadius = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldDistance = 500.0f;
+	float HoldDistance = 1000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bConsiderVelocity = true;
+	bool bConsiderVelocity = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ThrowDistance = 1500.0f;
+	float ThrowDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrowRadius = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ThrowStiffness = 500.0f;
+	float ThrowStiffness = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrowDamper = 0.1f;

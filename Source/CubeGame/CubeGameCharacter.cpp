@@ -15,7 +15,9 @@
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "CubeAbilityBlackHole.h"
+#include "CubeAbilityDilationDefense.h"
 #include "CubeAbilityGrab.h"
+#include "CubeAbilityShoot.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -49,7 +51,7 @@ ACubeGameCharacter::ACubeGameCharacter()
 	GetCameraBoom()->bEnableCameraLag = true;
 	GetCameraBoom()->CameraLagSpeed = 15.0f;
 	GetCameraBoom()->CameraLagMaxDistance = 20.0f;
-	GetCameraBoom()->AddLocalOffset(FVector(0, 0, 11.0f));
+	GetCameraBoom()->SetRelativeLocation(FVector(0, 0, CenterHeight));
 	// RootComponent = GetMesh();
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 
@@ -64,6 +66,7 @@ ACubeGameCharacter::ACubeGameCharacter()
 	MaxTorque = 50000000.0f;
 	JumpImpulse = 350000.0f;
 	MaxPower = 10000000.0f;
+	CurrentPower = MaxPower;
 	bConstantPower =  true;
 }
 
@@ -214,7 +217,22 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("ToFly", IE_Pressed, this, &ACubeGameCharacter::ToFly);
 
 	PlayerInputComponent->BindAction("BlackHole", IE_Released, this, &ACubeGameCharacter::BlackHole);
-	PlayerInputComponent->BindAction("Target", IE_Released, this, &ACubeGameCharacter::Grab);
+	
+	PlayerInputComponent->BindAction("Grab", IE_Pressed, this, &ACubeGameCharacter::BeginGrab);
+	PlayerInputComponent->BindAction("Grab", IE_Released, this, &ACubeGameCharacter::EndGrab);
+	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ACubeGameCharacter::Throw);
+
+	PlayerInputComponent->BindAction("Target", IE_Released, this, &ACubeGameCharacter::Target);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ACubeGameCharacter::Shoot);
+	
+	PlayerInputComponent->BindAction("DilationDefense", IE_Pressed, this, &ACubeGameCharacter::BeginDilationDefense);
+	PlayerInputComponent->BindAction("DilationDefense", IE_Released, this, &ACubeGameCharacter::EndDilationDefense);
+
+	PlayerInputComponent->BindAction("RadialMagnetic", IE_Pressed, this, &ACubeGameCharacter::BeginRadialMagnetic);
+	PlayerInputComponent->BindAction("RadialMagnetic", IE_Released, this, &ACubeGameCharacter::EndRadialMagnetic);
+	PlayerInputComponent->BindAction("RadialImpulse", IE_Pressed, this, &ACubeGameCharacter::BeginRadialImpulse);
+	PlayerInputComponent->BindAction("RadialImpulse", IE_Released, this, &ACubeGameCharacter::EndRadialImpulse);
+
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -337,7 +355,7 @@ void ACubeGameCharacter::MoveForward(float Value)
 						}
 						else if (bConstantPower)
 						{
-							TargetTorque = MaxPower / Omega;
+							TargetTorque = CurrentPower / Omega;
 						}
 					}
 					// TargetTorque *= ForwardValue;
@@ -404,7 +422,7 @@ void ACubeGameCharacter::MoveRight(float Value)
 						}
 						else if (bConstantPower)
 						{
-							TargetTorque = MaxPower / Omega;
+							TargetTorque = CurrentPower / Omega;
 						}
 					}
 					// TargetTorque *= RightValue;
@@ -445,7 +463,7 @@ void ACubeGameCharacter::MoveRight(float Value)
 
 void ACubeGameCharacter::UpdateRootMovement(float DeltaSeconds)
 {
-	FVector TargetLocation = GetMesh()->GetComponentLocation();
+	FVector TargetLocation = GetMesh()->GetBoneLocation(BodyName);
 	FVector CurrentLocation = GetActorLocation();
 	RootMovementSpring.bPrevTargetValid = false;
 	CurrentLocation = UKismetMathLibrary::VectorSpringInterp(CurrentLocation, TargetLocation, RootMovementSpring, 20, 1, DeltaSeconds);
@@ -470,6 +488,7 @@ void ACubeGameCharacter::EndSprint()
 
 void ACubeGameCharacter::OnSprintTimelineTick(float Value)
 {
+	CurrentPower = Value / SprintCurve->GetFloatValue(0.0) * MaxPower;
 	GetCharacterMovement()->MaxWalkSpeed = Value;
 }
 
@@ -551,7 +570,7 @@ void ACubeGameCharacter::BeginRelax()
 
 void ACubeGameCharacter::Aim()
 {
-	GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 50.0f));
+	// GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 50.0f));
 	//TODO HUD
 	GetCameraBoom()->bDoCollisionTest = true;
 	PhysicalAnimationComponent->SetStrengthMultiplyer(RelaxRate);
@@ -578,7 +597,7 @@ void ACubeGameCharacter::Mount()
 		}
 	}
 	
-	GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 10.0f));
+	// GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 10.0f));
 	GetCameraBoom()->bDoCollisionTest = true;
 
 }
@@ -817,47 +836,115 @@ void ACubeGameCharacter::BlackHole()
 	}
 }
 
-void ACubeGameCharacter::DilationDefense()
+void ACubeGameCharacter::BeginDilationDefense()
 {
+	AbilityDilationDefense = Cast<ACubeAbilityDilationDefense>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+		ACubeAbilityDilationDefense::StaticClass(), FTransform(GetActorLocation())));
+	if (AbilityDilationDefense)
+	{
+		AbilityDilationDefense->Initialize(this);
+		UGameplayStatics::FinishSpawningActor(AbilityDilationDefense, FTransform(GetActorLocation()));
+	}
+	
 }
 
-void ACubeGameCharacter::Grab()
+void ACubeGameCharacter::EndDilationDefense()
 {
-	if (IsValid(AbilityGrab))
+	if (IsValid(AbilityDilationDefense))
 	{
-		if (IsValid(AbilityGrab->GetGrabTarget()))
+		AbilityDilationDefense->Destroy();
+		AbilityDilationDefense = nullptr;
+	}
+}
+
+void ACubeGameCharacter::BeginGrab()
+{
+	if (CubeState == EShapeType::Cube)
+	{
+		AbilityGrab = Cast<ACubeAbilityGrab>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityGrab::StaticClass(), FTransform(GetActorLocation())));
+		if (AbilityGrab)
+		{
+			AbilityGrab->Initialize(this);
+			UGameplayStatics::FinishSpawningActor(AbilityGrab, FTransform(GetActorLocation()));
+		}
+	}
+
+}
+
+void ACubeGameCharacter::EndGrab()
+{
+	if (CubeState == EShapeType::Cube)
+	{
+		if (IsValid(AbilityGrab) && IsValid(AbilityGrab->GetGrabTarget()))
 		{
 			AbilityGrab->ReleaseGrabTarget();
 			AbilityGrab->Destroy();
 			AbilityGrab = nullptr;
 		}
-		else
-		{
-			AbilityGrab->FindGrabTarget();
-		}
 	}
-	else
-	{
-		AbilityGrab = Cast<ACubeAbilityGrab>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
-			ACubeAbilityGrab::StaticClass(), FTransform(GetActorLocation())));
-		AbilityGrab->Initialize(this);
-		UGameplayStatics::FinishSpawningActor(AbilityGrab, FTransform(GetActorLocation()));
-	}
+	
 }
 
 void ACubeGameCharacter::Throw()
 {
+	if (CubeState == EShapeType::Cube)
+	{
+		if (IsValid(AbilityGrab) && IsValid(AbilityGrab->GetGrabTarget()))
+		{
+			AbilityGrab->ThrowGrabTarget();
+			AbilityGrab->Destroy();
+			AbilityGrab = nullptr;
+		}
+	}
+}
+
+void ACubeGameCharacter::Target()
+{
+	if (CubeState == EShapeType::Sphere)
+	{
+		if (IsValid(AbilityShoot))
+		{
+			AbilityShoot->FindGrabTarget();
+		}
+		else
+		{
+			AbilityShoot = Cast<ACubeAbilityShoot>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityShoot::StaticClass(), FTransform(GetActorLocation())));
+			if (AbilityShoot)
+			{
+				AbilityShoot->Initialize(this);
+				UGameplayStatics::FinishSpawningActor(AbilityShoot, FTransform(GetActorLocation()));
+			}
+			AbilityShoot->FindGrabTarget();
+		}
+	}
 }
 
 void ACubeGameCharacter::Shoot()
 {
+	if (CubeState == EShapeType::Sphere)
+	{
+		if (IsValid(AbilityShoot))
+		{
+			AbilityShoot->ShootGrabTarget();
+		}
+	}
 }
 
-void ACubeGameCharacter::RadialImpulse()
+void ACubeGameCharacter::BeginRadialImpulse()
 {
 }
 
-void ACubeGameCharacter::RadialMagnetic()
+void ACubeGameCharacter::EndRadialImpulse()
+{
+}
+
+void ACubeGameCharacter::EndRadialMagnetic()
+{
+}
+
+void ACubeGameCharacter::BeginRadialMagnetic()
 {
 }
 

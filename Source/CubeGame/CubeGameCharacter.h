@@ -117,7 +117,7 @@ public:
 	float RelaxThreshold = 50.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CenterHeight = 17.5;
+	float CenterHeight = 60.0f;
 	
 	bool bIsMounted;
 	
@@ -141,6 +141,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxPower;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentPower;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bConstantPower;
@@ -200,17 +203,27 @@ protected:
 
 	void BlackHole();
 
-	void DilationDefense();
+	void BeginDilationDefense();
 
-	void Grab();
+	void EndDilationDefense();
+
+	void BeginGrab();
+
+	void EndGrab();
 
 	void Throw();
 
+	void Target();
+	
 	void Shoot();
 
-	void RadialImpulse();
+	void BeginRadialImpulse();
 
-	void RadialMagnetic();
+	void EndRadialImpulse();
+
+	void BeginRadialMagnetic();
+
+	void EndRadialMagnetic();
 	
 	EShapeType CubeState;
 	

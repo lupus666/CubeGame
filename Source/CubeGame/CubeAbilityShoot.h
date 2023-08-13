@@ -59,7 +59,7 @@ protected:
 
 	void RemoveTarget(AActor* Actor);
 
-	void SuctionTarget();
+	void FloatTarget();
 
 public:
 	virtual void Tick(float DeltaSeconds) override;

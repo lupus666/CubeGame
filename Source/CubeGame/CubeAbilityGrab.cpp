@@ -3,6 +3,7 @@
 
 #include "CubeAbilityGrab.h"
 #include "CubeGameCharacter.h"
+#include "CubePlayerController.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACubeAbilityGrab::ACubeAbilityGrab()
@@ -65,14 +66,15 @@ void ACubeAbilityGrab::ThrowGrabTarget()
 
 			FVector Target;
 			if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, ThrowRadius, ObjectTypes,
-			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
+			false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
 			{
 				Target = HitResult.GetActor()->GetActorLocation();
 			}
 			else
 			{
+				Cast<ACubePlayerController>(CubeGameCharacter->GetController());
 				if (UKismetSystemLibrary::SphereTraceSingle(this, HitResult.TraceStart, HitResult.TraceEnd, ThrowRadius,
-					ETraceTypeQuery::TraceTypeQuery1, false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
+					ETraceTypeQuery::TraceTypeQuery1, false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
 				{
 					Target = HitResult.Location;
 				}

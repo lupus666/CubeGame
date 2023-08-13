@@ -94,7 +94,7 @@ void ACubeAbilityShoot::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	SuctionTarget();
+	FloatTarget();
 }
 
 void ACubeAbilityShoot::AddTarget(AActor* Actor)
@@ -113,7 +113,7 @@ void ACubeAbilityShoot::RemoveTarget(AActor* Actor)
 	}
 }
 
-void ACubeAbilityShoot::SuctionTarget()
+void ACubeAbilityShoot::FloatTarget()
 {
 	if (CubeGameCharacter)
 	{

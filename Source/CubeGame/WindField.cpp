@@ -23,12 +23,19 @@ AWindField::AWindField()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 	RootComponent = BoxComponent;
 	BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SceneCaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>("SceneCapture2D");
-	SceneCaptureComponent2D->SetupAttachment(RootComponent);
-	SceneCaptureComponent2D->ProjectionType = ECameraProjectionMode::Orthographic;
-	SceneCaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-	SceneCaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_DeviceDepth;
-	SceneCaptureComponent2D->PostProcessBlendWeight = 0.0;
+	SceneCaptureDepth = CreateDefaultSubobject<USceneCaptureComponent2D>("SceneCaptureDepth");
+	SceneCaptureDepth->SetupAttachment(RootComponent);
+	SceneCaptureDepth->ProjectionType = ECameraProjectionMode::Orthographic;
+	SceneCaptureDepth->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+	SceneCaptureDepth->CaptureSource = ESceneCaptureSource::SCS_DeviceDepth;
+	SceneCaptureDepth->PostProcessBlendWeight = 0.0;
+
+	SceneCaptureNormal = CreateDefaultSubobject<USceneCaptureComponent2D>("SceneCaptureNormal");
+	SceneCaptureNormal->SetupAttachment(RootComponent);
+	SceneCaptureNormal->ProjectionType = ECameraProjectionMode::Orthographic;
+	SceneCaptureNormal->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+	SceneCaptureNormal->CaptureSource = ESceneCaptureSource::SCS_Normal;
+	SceneCaptureNormal->PostProcessBlendWeight = 0.0;
 }
 
 // Called when the game starts or when spawned
@@ -43,7 +50,7 @@ void AWindField::ChangeWindDirection()
 	
 }
 
-void AWindField::ApplyWindEffect(AActor* Actor)
+void AWindField::AddWindLoad(AActor* Actor)
 {
 	if (USkeletalMeshComponent* SkeletalMesh = Actor->GetComponentByClass<USkeletalMeshComponent>())
 	{
@@ -76,14 +83,23 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
 			
 			UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
-			SceneCaptureComponent2D->ShowOnlyActors.Empty();
-			SceneCaptureComponent2D->ShowOnlyActors.Add(Actor);
-			SceneCaptureComponent2D->TextureTarget = RTDepthMap;
-			SceneCaptureComponent2D->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
-			SceneCaptureComponent2D->SetWorldLocation(CaptureLocation);
-			SceneCaptureComponent2D->SetWorldRotation(WindDirection.Rotation());
-			SceneCaptureComponent2D->CaptureScene();
+			SceneCaptureDepth->ShowOnlyActors.Empty();
+			SceneCaptureDepth->ShowOnlyActors.Add(Actor);
+			SceneCaptureDepth->TextureTarget = RTDepthMap;
+			SceneCaptureDepth->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
+			SceneCaptureDepth->SetWorldLocation(CaptureLocation);
+			SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
+			SceneCaptureDepth->CaptureScene();
 
+			UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+			SceneCaptureNormal->ShowOnlyActors.Empty();
+			SceneCaptureNormal->ShowOnlyActors.Add(Actor);
+			SceneCaptureNormal->TextureTarget = RTNormalMap;
+			SceneCaptureNormal->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
+			SceneCaptureNormal->SetWorldLocation(CaptureLocation);
+			SceneCaptureNormal->SetWorldRotation(WindDirection.Rotation());
+			SceneCaptureNormal->CaptureScene();
+			
 			//TODO performance optimization
 			FRenderTarget* RenderTarget = RTDepthMap->GameThread_GetRenderTargetResource();
 			TArray<FColor> Pixels;
@@ -102,8 +118,8 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 				// FIntPoint PixelPosition(FMath::RoundToInt(ScreenPosition.X * TextureSize.X), FMath::RoundToInt(ScreenPosition.Y * TextureSize.Y));
 				// UKismetSystemLibrary::PrintString(this, PixelPosition.ToString());
 			}
-			float PixelX = SceneCaptureComponent2D->OrthoWidth / TextureSize.X * 0.01; 
-			float PixelY = SceneCaptureComponent2D->OrthoWidth / TextureSize.Y * 0.01;
+			float PixelX = SceneCaptureDepth->OrthoWidth / TextureSize.X * 0.01; 
+			float PixelY = SceneCaptureDepth->OrthoWidth / TextureSize.Y * 0.01;
 			float PixelArea = PixelX * PixelY;
 
 			int PixelCount = 0;
@@ -133,8 +149,8 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 
 			//TODO Total lever arm BUG
 			
-			FVector RightVector = SceneCaptureComponent2D->GetRightVector();
-			FVector UpVector = SceneCaptureComponent2D->GetUpVector();
+			FVector RightVector = SceneCaptureDepth->GetRightVector();
+			FVector UpVector = SceneCaptureDepth->GetUpVector();
 			FVector RVector = -TotalR.X * PixelX * UpVector + TotalR.Y * PixelY * RightVector;
 			const float SurfaceArea = PixelCount * PixelArea;
 
@@ -174,6 +190,11 @@ void AWindField::ApplyWindEffect(AActor* Actor)
 			BodyInstance->AddForce(Force);
 		}
 	}
+}
+
+void AWindField::CaptureDepthNormal()
+{
+	
 }
 
 FVector AWindField::CalcWindLoad(float WindSurfaceArea)
@@ -260,7 +281,7 @@ void AWindField::Tick(float DeltaTime)
 			{
 				if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
 				{
-					ApplyWindEffect(Actor);
+					AddWindLoad(Actor);
 				}
 			}
 		}

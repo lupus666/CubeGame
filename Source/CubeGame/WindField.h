@@ -23,8 +23,11 @@ public:
 	FVector WindDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	USceneCaptureComponent2D* SceneCaptureComponent2D;
+	USceneCaptureComponent2D* SceneCaptureDepth;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	USceneCaptureComponent2D* SceneCaptureNormal;
+	
 	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	// UTextureRenderTarget2D* RTDepthMap;
 	
@@ -61,7 +64,9 @@ protected:
 
 	void ChangeWindDirection();
 
-	void ApplyWindEffect(AActor* Actor);
+	void AddWindLoad(AActor* Actor);
+
+	void CaptureDepthNormal();
 
 public:	
 	// Called every frame

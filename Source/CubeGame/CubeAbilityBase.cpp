@@ -56,10 +56,13 @@ void ACubeAbilityBase::AddImpulseToward(AActor* Actor, FVector TargetImpulse, fl
 		FVector LinearVelocity;
 		FVector AngularVelocity;
 		GetTargetVelocity(Actor, LinearVelocity, AngularVelocity);
-		
-		const FVector Impulse = ((TargetImpulse - Actor->GetActorLocation()).GetSafeNormal() * LinearStiffness - LinearVelocity);
+		const FVector DeltaImpulse = TargetImpulse - Actor->GetActorLocation();
+		const FVector Impulse = DeltaImpulse.GetSafeNormal() * LinearStiffness - LinearVelocity - GetTargetGravity(Actor) * 0.5 * DeltaImpulse.Size() / LinearStiffness;
 		const FVector AngularImpulse = AngularVelocity * -AngularDamper;
-		AddImpulse(Actor, Impulse, AngularImpulse, false);
+		UKismetSystemLibrary::PrintString(this, Impulse.ToString());
+		UKismetSystemLibrary::PrintString(this, DeltaImpulse.ToString());
+
+		AddImpulse(Actor, Impulse, AngularImpulse, true);
 	}
 }
 
@@ -91,7 +94,7 @@ void ACubeAbilityBase::AddForceToward(AActor* Actor, FVector TargetForce, float 
 		FVector LinearVelocity;
 		FVector AngularVelocity;
 		GetTargetVelocity(Actor, LinearVelocity, AngularVelocity);
-		const FVector Force = (TargetForce - Actor->GetActorLocation() - LinearVelocity) * LinearStiffness;
+		const FVector Force = (TargetForce - Actor->GetActorLocation() - LinearVelocity) * LinearStiffness - GetTargetGravity(Actor);;
 		const FVector Torque = AngularVelocity * -AngularDamper;
 		AddForce(Actor, Force, Torque, true);
 	}
