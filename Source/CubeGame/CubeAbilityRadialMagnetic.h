@@ -14,4 +14,43 @@ class CUBEGAME_API ACubeAbilityRadialMagnetic : public ACubeAbilityBase
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MinDistance = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxDistance = 2000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MinChargeTime = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxChargeTime = 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MinStrength = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxStrength = 1000.0f;
+
+	float ChargeTime;
+	
+protected:
+	virtual void BeginPlay() override;
+
+	void GetTargets();
+
+	void RadialGrab();
+	
+	UPROPERTY()
+	TArray<AActor* > Targets;
+	
+	float Distance;
+	
+	float Strength;
+
+public:
+	virtual void Tick(float DeltaSeconds) override;
+
+	float LerpByCharge(float Min, float Max);
 };

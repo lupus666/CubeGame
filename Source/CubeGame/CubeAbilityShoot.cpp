@@ -3,6 +3,7 @@
 
 #include "CubeAbilityShoot.h"
 #include "CubeGameCharacter.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACubeAbilityShoot::ACubeAbilityShoot()
@@ -97,6 +98,23 @@ void ACubeAbilityShoot::Tick(float DeltaSeconds)
 	FloatTarget();
 }
 
+bool ACubeAbilityShoot::IsValidTarget(AActor* Actor)
+{
+	if (IsValid(Actor))
+	{
+		if (const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
+		{
+			UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_BoolToString(StaticMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass));
+			return StaticMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
+		}
+		else if (const USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
+		{
+			return SkeletalMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
+		}
+	}
+	return false;
+}
+
 void ACubeAbilityShoot::AddTarget(AActor* Actor)
 {
 	if (GrabTargets.Num() < MaxTargets)
@@ -122,7 +140,8 @@ void ACubeAbilityShoot::FloatTarget()
 			AActor* Actor = GrabTargets[i];
 			if (IsValid(Actor))
 			{
-				const float Radian = i / GrabTargets.Num() * 2 * UE_PI;
+				float Radian = float(i) / MaxTargets * 2.0f * UE_PI;
+
 				const FVector CameraForwardVector = CubeGameCharacter->GetFollowCamera()->GetForwardVector();
 				FRotator Rotation = FRotator(0.0, CameraForwardVector.Rotation().Yaw, 0.0);
 				FVector Center = FVector(FMath::Cos(Radian) * HoldXY, FMath::Sin(Radian) * HoldXY, HoldZ);

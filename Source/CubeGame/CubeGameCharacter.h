@@ -287,6 +287,14 @@ protected:
 	UPROPERTY()
 	class ACubeAbilityDilationDefense* AbilityDilationDefense;
 
+	float ChargeTime = 0;
+
+	UPROPERTY()
+	class ACubeAbilityRadialImpulse* AbilityRadialImpulse;
+
+	UPROPERTY()
+	class ACubeAbilityRadialMagnetic* AbilityRadialMagnetic;
+
 public:
 	FVector GetMountLocation() const;
 	

@@ -48,7 +48,7 @@ void ACubeAbilityDilationDefense::DilationDefense()
 					FVector AngularVelocity;
 					GetTargetVelocity(Actor, LinearVelocity, AngularVelocity);
 
-					AddImpulse(Actor, -DilationRatio * LinearVelocity, -DilationRatio * AngularVelocity, false);
+					AddImpulse(Actor, -DilationRatio * LinearVelocity, -DilationRatio * AngularVelocity, true);
 					AddForce(Actor, -GetTargetGravity(Actor), FVector(0.0, 0.0, 0.0), true);
 				}
 			}

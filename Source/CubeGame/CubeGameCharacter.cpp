@@ -17,6 +17,8 @@
 #include "CubeAbilityBlackHole.h"
 #include "CubeAbilityDilationDefense.h"
 #include "CubeAbilityGrab.h"
+#include "CubeAbilityRadialImpulse.h"
+#include "CubeAbilityRadialMagnetic.h"
 #include "CubeAbilityShoot.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -934,18 +936,43 @@ void ACubeGameCharacter::Shoot()
 
 void ACubeGameCharacter::BeginRadialImpulse()
 {
+	if (CubeState == EShapeType::Sphere)
+	{
+		ChargeTime = GetWorld()->GetTimeSeconds();
+	}
 }
 
 void ACubeGameCharacter::EndRadialImpulse()
 {
+	if (CubeState == EShapeType::Sphere)
+	{
+		AbilityRadialImpulse = Cast<ACubeAbilityRadialImpulse>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityRadialImpulse::StaticClass(), FTransform(GetActorLocation())));
+		AbilityRadialImpulse->Initialize(this);
+		AbilityRadialImpulse->ChargeTime = (GetWorld()->GetTimeSeconds() - ChargeTime);
+		UGameplayStatics::FinishSpawningActor(AbilityRadialImpulse, FTransform(GetActorLocation()));
+	}
+	
 }
 
 void ACubeGameCharacter::EndRadialMagnetic()
 {
+	if (CubeState == EShapeType::Sphere)
+	{
+		AbilityRadialMagnetic = Cast<ACubeAbilityRadialMagnetic>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
+			ACubeAbilityRadialMagnetic::StaticClass(), FTransform(GetActorLocation())));
+		AbilityRadialMagnetic->Initialize(this);
+		AbilityRadialMagnetic->ChargeTime = (GetWorld()->GetTimeSeconds() - ChargeTime);
+		UGameplayStatics::FinishSpawningActor(AbilityRadialMagnetic, FTransform(GetActorLocation()));
+	}
 }
 
 void ACubeGameCharacter::BeginRadialMagnetic()
 {
+	if (CubeState == EShapeType::Sphere)
+	{
+		ChargeTime = GetWorld()->GetTimeSeconds();
+	}
 }
 
 

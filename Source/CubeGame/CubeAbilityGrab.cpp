@@ -39,6 +39,7 @@ void ACubeAbilityGrab::FindGrabTarget()
 			if (IsValidTarget(Actor))
 			{
 				SetGrabTarget(Actor);
+				HoldDistance = (CameraLocation - Actor->GetActorLocation()).Size();
 			}
 		}
 	}

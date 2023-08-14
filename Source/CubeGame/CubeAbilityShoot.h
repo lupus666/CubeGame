@@ -26,7 +26,7 @@ public:
 	void ShootGrabTarget();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int MaxTargets;
+	int MaxTargets = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float GrabDistance = 1000.0f;
@@ -35,10 +35,10 @@ public:
 	float GrabRadius = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldXY = 50.0f;
+	float HoldXY = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldZ = 20.0f;
+	float HoldZ = 50.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ShootDistance = 2000.0f;
@@ -47,10 +47,13 @@ public:
 	float ShootRadius = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ShootStiffness = 1000.0f;
+	float ShootStiffness = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ShootDamper = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxMass = 2.0f;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -63,4 +66,6 @@ protected:
 
 public:
 	virtual void Tick(float DeltaSeconds) override;
+
+	virtual bool IsValidTarget(AActor* Actor) override;;
 };

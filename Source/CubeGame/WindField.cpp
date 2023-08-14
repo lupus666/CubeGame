@@ -92,7 +92,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 			SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
 			SceneCaptureDepth->CaptureScene();
 
-			UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+			// UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
 			SceneCaptureNormal->ShowOnlyActors.Empty();
 			SceneCaptureNormal->ShowOnlyActors.Add(Actor);
 			SceneCaptureNormal->TextureTarget = RTNormalMap;
@@ -104,10 +104,10 @@ void AWindField::AddWindLoad(AActor* Actor)
 			//TODO performance optimization
 			FRenderTarget* RenderTargetDepth = RTDepthMap->GameThread_GetRenderTargetResource();
 			TArray<FColor> PixelsDepth;
-			FReadSurfaceDataFlags ReadPixelFlags(RCM_UNorm);
+			FReadSurfaceDataFlags ReadPixelFlags(RCM_MinMax);
 			RenderTargetDepth->ReadPixels(PixelsDepth, ReadPixelFlags);
 
-			FRenderTarget* RenderTargetNormal = RTDepthMap->GameThread_GetRenderTargetResource();
+			FRenderTarget* RenderTargetNormal = RTNormalMap->GameThread_GetRenderTargetResource();
 			TArray<FColor> PixelsNormal;
 			RenderTargetNormal->ReadPixels(PixelsNormal, ReadPixelFlags);
 
@@ -131,7 +131,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 
 			int PixelCount = 0;
 			FVector TotalR = FVector(0, 0, 0);
-			
+			FVector TotalForce = FVector(0, 0, 0);
 			for (int i = 0; i < TextureSize.X; i++)
 			{
 				for (int j = 0; j < TextureSize.Y; j++)
@@ -139,6 +139,14 @@ void AWindField::AddWindLoad(AActor* Actor)
 					if (PixelsDepth[i * TextureSize.Y + j] != FColor::Black)
 					{
 						PixelCount += 1;
+						FVector PixelNormal = FVector(PixelsNormal[i * TextureSize.Y + j]);
+						if (i == 128 && j == 128)
+						{
+							UKismetSystemLibrary::PrintString(this, PixelsNormal[i * TextureSize.Y + j].ToString());
+							UKismetSystemLibrary::PrintString(this, PixelNormal.ToString());
+
+						}
+						TotalForce += CalcWindLoadByArea(PixelArea) * FVector::DotProduct(-PixelNormal.GetSafeNormal(), WindDirection.GetSafeNormal()) * -PixelNormal;
 						TotalR += FVector(i + 0.5 - TextureSize.X/2.0f, j + 0.5 - TextureSize.Y/2.0f, 0);
 					}
 				}
@@ -155,14 +163,13 @@ void AWindField::AddWindLoad(AActor* Actor)
 			}
 
 			//TODO Total lever arm BUG
-			
 			FVector RightVector = SceneCaptureDepth->GetRightVector();
 			FVector UpVector = SceneCaptureDepth->GetUpVector();
 			FVector RVector = -TotalR.X * PixelX * UpVector + TotalR.Y * PixelY * RightVector;
-			const float SurfaceArea = PixelCount * PixelArea;
 
 			//TODO fix
-			const FVector TotalForce = CalcWindLoadByArea(SurfaceArea);
+			// const float SurfaceArea = PixelCount * PixelArea;
+			// const FVector TotalForce = CalcWindLoadByArea(SurfaceArea);
 
 			//TODO deduce
 			const FVector TotalTorque = UKismetMathLibrary::Cross_VectorVector(RVector, TotalForce);
@@ -174,7 +181,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 			// UKismetSystemLibrary::PrintString(this, TotalR.ToString());
 			// UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
 			// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
-			// UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
+			UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
 			// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 		}
 	}
@@ -258,7 +265,7 @@ FVector AWindField::CalcWindForceByBodyInstance(FBodyInstance* BodyInstance) con
 
 FVector AWindField::CalcWindForceByRenderTarget()
 {
-
+	return FVector(0,0,0);
 }
 
 // Called every frame
