@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CubeGameGameMode.h"
-#include "CubeGameCharacter.h"
+#include "CubeGame/Character/CubeGameCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 ACubeGameGameMode::ACubeGameGameMode()
