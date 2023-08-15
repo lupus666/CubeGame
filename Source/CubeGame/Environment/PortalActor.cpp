@@ -4,6 +4,8 @@
 #include "PortalActor.h"
 #include "Portal.h"
 #include "Components/ShapeComponent.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 // Sets default values
@@ -23,13 +25,18 @@ void APortalActor::BeginPlay()
 	Super::BeginPlay();
 
 	GetComponents(ActorMeshes);
+	GetComponents(ShapeComponents);
 	for (auto& StaticMesh: ActorMeshes)
 	{
 		InitStaticMesh(StaticMesh);
 	}
+	for (auto& ShapeComponent: ShapeComponents)
+	{
+		InitStaticShape(ShapeComponent);
+	}
 }
 
-bool APortalActor::GetVisbility(bool bIsVisible)
+bool APortalActor::GetVisibility(bool bIsVisible)
 {
 	bIsVisible = bThroughPortal | bIsInversionVisibility? !bIsVisible: bIsVisible;
 	bIsVisible = BelongPortal->bIsPlayerSide && bIsInversionVisibility? !bIsVisible: bIsVisible;
@@ -54,15 +61,34 @@ void APortalActor::InitStaticMesh(UStaticMeshComponent* StaticMeshComponent)
 	if (IsValid(StaticMeshComponent))
 	{
 		StaticMeshComponent->SetScalarParameterValueOnMaterials("Visible", bIsInversed);
-		if (bIsInversed)
+		if (bIsInversed | (Tags.Num() == 0))
 		{
-			StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			StaticMeshComponent->SetCollisionProfileName(FName("PhysicsActor"));
 		}
 		else
 		{
-			StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			StaticMeshComponent->SetCollisionProfileName(FName("MeshNoCube"));
 		}
 		bVisibility = bIsInversed;
+	}
+}
+
+void APortalActor::InitStaticShape(UShapeComponent* StaticShapeComponent)
+{
+	if (IsValid(StaticShapeComponent))
+	{
+		if (bIsInversed | (Tags.Num() == 0))
+		{
+			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			StaticShapeComponent->SetCollisionProfileName(FName("OverlapAll"));
+		}
+		else
+		{
+			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			StaticShapeComponent->SetCollisionProfileName(FName("CollisionNoCube"));
+		}
 	}
 }
 
@@ -91,22 +117,24 @@ void APortalActor::Seen(bool bIsVisible)
 {
 	if (!bTransition)
 	{
-		bVisibility = GetVisbility(bIsVisible);
-		ECollisionEnabled::Type CollisionType = bVisibility ? ECollisionEnabled::QueryAndPhysics: ECollisionEnabled::NoCollision;
+		bVisibility = GetVisibility(bIsVisible);
+		// ECollisionEnabled::Type CollisionType = bVisibility ? ECollisionEnabled::QueryAndPhysics: ECollisionEnabled::QueryAndPhysics;
+		FName MeshProfileName = bVisibility ? FName("PhysicsActor"): FName("MeshNoCube");
+		FName CollisionProfileName = bVisibility ? FName("OverlapAll"): FName("CollisionNoCube");
 		for (auto& StaticMesh: ActorMeshes)
 		{
 			if (IsValid(StaticMesh))
 			{
-				StaticMesh->SetCollisionEnabled(CollisionType);
+				// StaticMesh->SetCollisionEnabled(CollisionType);
+				StaticMesh->SetCollisionProfileName(MeshProfileName);
 			}	
 		}
 
 		//TODO Debug for WindField & GravityVolume
-		TArray<UShapeComponent* > ShapeComponents;
-		GetComponents(ShapeComponents);
 		for (auto& ShapeComponent: ShapeComponents)
 		{
-			ShapeComponent->SetCollisionEnabled(CollisionType);
+			// ShapeComponent->SetCollisionEnabled(CollisionType);
+			ShapeComponent->SetCollisionProfileName(CollisionProfileName);
 		}
 	}
 }
@@ -176,5 +204,27 @@ void APortalActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, APortal*
 		bTransition = false;
 		Portal->ResetSeeActor(this);
 	}
+}
+
+bool APortalActor::InSameSide(const APortalActor* PortalActor) const
+{
+	TArray<FName> OtherTags = PortalActor->Tags;
+	if (Tags.Num() == 0)
+	{
+		return true;
+	}
+	if (OtherTags.Num() == 0)
+	{
+		return false;
+	}
+
+	for (auto& Tag: OtherTags)
+	{
+		if (Tags.Contains(Tag))
+		{
+			return PortalActor->bIsBackSide == bIsBackSide;
+		}
+	}
+	return false;
 }
 

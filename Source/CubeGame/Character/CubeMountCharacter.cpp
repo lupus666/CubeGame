@@ -71,13 +71,14 @@ void ACubeMountCharacter::OnMount(ACharacter* MountCharacter)
 	CubeMountCharacter = Cast<ACubeMountCharacter>(MountCharacter);
 	if (ACubeGameCharacter* CubeCharacter = Cast<ACubeGameCharacter>(MountCharacter))
 	{
-		CubeCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-		CubeCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		// CubeCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		// CubeCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 		CubeCharacter->GetRootComponent()->SetWorldLocation(CubeCharacter->GetMountLocation(), true);
 		const FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget,
 			EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, false);
-		if (CubeCharacter->AttachToComponent(GetMesh(), AttachmentTransformRules,
-			UKismetStringLibrary::Conv_StringToName(UKismetStringLibrary::BuildString_Name("", "", CubeCharacter->GetMountBoneName(), "Socket"))))
+		FName SocketName = UKismetStringLibrary::Conv_StringToName(UKismetStringLibrary::BuildString_Name("", "", CubeCharacter->GetMountBoneName(), "Socket"));
+		UKismetSystemLibrary::PrintString(this, SocketName.ToString());
+		if (CubeCharacter->AttachToComponent(GetMesh(), AttachmentTransformRules, SocketName))
 		{
 			UGameplayStatics::GetPlayerController(this, 0)->Possess(this);
 			if (UCubeAnimInstance* CubeAnimInstance = Cast<UCubeAnimInstance>(CubeCharacter->AnimInstance))
@@ -98,8 +99,8 @@ void ACubeMountCharacter::UnMount()
 		{
 			CubeAnimInstance->bIsOnMount = false;
 		}
-		CubeCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		CubeCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		// CubeCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		// CubeCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 		const FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepRelative, EDetachmentRule::KeepRelative, EDetachmentRule::KeepRelative, true);
 		CubeCharacter->DetachFromActor(DetachmentTransformRules);
 		CubeCharacter->GetRootComponent()->SetWorldLocation(GetRootComponent()->GetComponentLocation() + FVector(0.0, 0.0, 50.0f) + GetActorForwardVector() * -10.0f);

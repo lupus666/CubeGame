@@ -574,33 +574,45 @@ void ACubeGameCharacter::Aim()
 {
 	// GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 50.0f));
 	//TODO HUD
-	GetCameraBoom()->bDoCollisionTest = true;
-	PhysicalAnimationComponent->SetStrengthMultiplyer(RelaxRate);
+	// GetCameraBoom()->bDoCollisionTest = true;
+	// PhysicalAnimationComponent->SetStrengthMultiplyer(RelaxRate);
 	// TODO Character Rotation with Camera
 }
 
 void ACubeGameCharacter::Mount()
 {
-	GetCameraBoom()->bDoCollisionTest = false;
+	// GetCameraBoom()->bDoCollisionTest = false;
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
-	FVector Start = CameraManager->K2_GetActorLocation();
-	FVector End = CameraManager->GetActorForwardVector()*MountDistance + Start;
-	FHitResult OutHit;
-	FCollisionQueryParams TraceParams(FName("MountTrace"), false, GetOwner());
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, TraceParams))
+	FVector Start = CameraManager->GetTransformComponent()->GetComponentLocation();
+	FVector End = CameraManager->GetTransformComponent()->GetForwardVector()*MountDistance + Start;
+	TArray<FHitResult> HitResults;
+	TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
+	});
+	if (UKismetSystemLibrary::LineTraceMultiForObjects(this, Start, End, ObjectTypes, false,
+		TArray<AActor*>(), EDrawDebugTrace::None, HitResults, true))
 	{
-		if (ACubeMountCharacter* MountCharacter = Cast<ACubeMountCharacter>(OutHit.GetActor()))
+		for (auto& HitResult: HitResults)
 		{
-			GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 0));
-			MountLocation = OutHit.Location;
-			MountBoneName = OutHit.BoneName;
-			MountCharacter->OnMount(this);
-			bIsMounted = true;
+			if (ACubeMountCharacter* MountCharacter = Cast<ACubeMountCharacter>(HitResult.GetActor()))
+			{
+				if (HitResult.GetComponent() == MountCharacter->GetMesh())
+				{
+					// GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 0));
+					MountLocation = HitResult.Location;
+					MountBoneName = HitResult.BoneName;
+					MountCharacter->OnMount(this);
+					bIsMounted = true;
+					break;
+				}
+			}
 		}
+		
 	}
 	
 	// GetCameraBoom()->SetRelativeLocation(FVector(0, 0, 10.0f));
-	GetCameraBoom()->bDoCollisionTest = true;
+	// GetCameraBoom()->bDoCollisionTest = true;
 
 }
 

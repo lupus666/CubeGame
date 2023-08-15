@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PortalActor.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "Pinhole.generated.h"
 
 UCLASS()
-class CUBEGAME_API APinhole : public AActor
+class CUBEGAME_API APinhole : public APortalActor
 {
 	GENERATED_BODY()
 	

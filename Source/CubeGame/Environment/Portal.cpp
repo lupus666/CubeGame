@@ -4,7 +4,9 @@
 #include "Portal.h"
 
 #include "PortalActor.h"
+#include "WindField.h"
 #include "Components/BoxComponent.h"
+#include "CubeGame/Character/CubeGameCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -24,7 +26,8 @@ APortal::APortal()
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>("Box");
 	BoxComponent->SetupAttachment(RootComponent);
-	
+
+	// TODO Debug
 	TArray<AActor*> Portals;
 	UGameplayStatics::GetAllActorsOfClass(this, PortalClass, Portals);
 	for (auto& Actor: Portals)
@@ -66,8 +69,7 @@ void APortal::BeginPlay()
 
 	// fix shadows
 	UKismetSystemLibrary::ExecuteConsoleCommand(this, "r.Shadow.Virtual.Enable 0");
-	UGameplayStatics::GetAllActorsWithTag(this, FName(FString("Portal") + UKismetStringLibrary::Conv_IntToString(PortalTag)), PortalActors);
-
+	UGameplayStatics::GetAllActorsWithTag(this, FName("Portal"+FString::FromInt(PortalTag)), PortalActors);
 	for (auto& Actor: PortalActors)
 	{
 		if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
@@ -103,6 +105,14 @@ void APortal::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		if (APortalActor* PortalActor = Cast<APortalActor>(OtherActor))
 		{
 			PortalActor->BeginOverlap(OtherComp, this);
+		}
+		if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
+		{
+			UBoxComponent* CubeBoxComponent = CubeGameCharacter->GetComponentByClass<UBoxComponent>();
+			if (CubeBoxComponent == OtherComp)
+			{
+				bIsCharacterOverlap = !bIsCharacterOverlap;
+			}
 		}
 	}
 }
@@ -147,7 +157,7 @@ void APortal::Tick(float DeltaTime)
 		const FVector PlaneBottom = PortalPlane->GetSocketLocation(FName("D"));
 		const FVector PlaneLeft = PortalPlane->GetSocketLocation(FName("L"));
 		const FVector PlaneRight = PortalPlane->GetSocketLocation(FName("R"));
-		const FVector PortalUpVector = PortalPlane->GetForwardVector();
+		const FVector PortalUpVector = PortalPlane->GetUpVector();
 		const FVector PortalRightVector = PortalPlane->GetRightVector();
 		const FVector PortalForwardVector = PortalPlane->GetForwardVector();
 		const FVector PortalLocation = PortalPlane->GetComponentLocation();
@@ -158,6 +168,11 @@ void APortal::Tick(float DeltaTime)
 			if (BoxComponent->IsOverlappingActor(UGameplayStatics::GetPlayerPawn(this, 0)))
 			{
 				//TODO Debug
+				TransitCharacter();
+			}
+			else if (bIsCharacterOverlap)
+			{
+				bIsCharacterOverlap = false;
 				TransitCharacter();
 			}
 		}
@@ -171,27 +186,27 @@ void APortal::Tick(float DeltaTime)
 			FVector UpFinish = UpStart + UpDelta;
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpStart"), FLinearColor(UpStart));
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpFinish"), FLinearColor(UpFinish));
+			
 			FVector BottomDelta = -UKismetMathLibrary::GetUpVector(UKismetMathLibrary::MakeRotFromXY(bIsBackSide ? CameraLocation - PlaneBottom: PlaneBottom - CameraLocation, PortalRightVector));
 			FVector BottomStart = BottomDelta * PortalRange + PlaneBottom;
 			FVector BottomFinish = BottomStart + BottomDelta;
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomStart"), FLinearColor(BottomStart));
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomFinish"), FLinearColor(BottomFinish));
+			
 			FVector BackStart = PortalForwardVector * PortalRange * (bIsBackSide? 1: -1) + PortalLocation;
 			FVector BackFinish = PortalForwardVector * PortalViewDistance * (bIsBackSide? 1: -1) + PortalLocation;
-			
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackStart"), FLinearColor(BackStart));
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackFinish"), FLinearColor(BackFinish));
 			FVector LeftDelta = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromXZ(PlaneLeft - CameraLocation, PortalUpVector));
+			
 			FVector LeftStart = LeftDelta * PortalRange * (bIsBackSide? 1:-1) + PlaneLeft;
 			FVector LeftFinish = LeftStart + LeftDelta * (bIsBackSide? 1:-1);
-			
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftStart"), FLinearColor(LeftStart));
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftFinish"), FLinearColor(LeftFinish));
 
 			FVector RightDelta = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromXZ(PlaneRight - CameraLocation, PortalUpVector));
 			FVector RightStart = RightDelta * PortalRange * (bIsBackSide? -1:1) + PlaneRight;
 			FVector RightFinish = RightDelta * (bIsBackSide? -1:1) + RightStart;
-
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightStart"), FLinearColor(RightStart));
 			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightFinish"), FLinearColor(RightFinish));
 			
@@ -202,7 +217,8 @@ void APortal::Tick(float DeltaTime)
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery1),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery9)}
 			);
 		for (auto& Actor: PortalActors)
 		{
@@ -211,12 +227,12 @@ void APortal::Tick(float DeltaTime)
 				TArray<FHitResult> HitResults;
 				bool bHit = UKismetSystemLibrary::LineTraceMultiForObjects(this, PortalActor->GetActorLocation(), CameraLocation,
 					ObjectTypes, false, TArray<AActor* >(), EDrawDebugTrace::None, HitResults, false);
-
+				
 				if (bHit)
 				{
 					for (auto& HitResult: HitResults)
 					{
-						if (HitResult.GetComponent() == BoxComponent)
+						if (HitResult.GetComponent() == PortalPlane)
 						{
 							bThroughPortal = true;
 							if (VisibleActors.Find(PortalActor) < 0)
@@ -286,8 +302,9 @@ void APortal::TransitActors()
 
 void APortal::TransitCharacter()
 {
-	if (PortalTag <= PortalCollections.Num())
+	if (PortalTag <= PortalCollections.Num() && !bTransitionControl)
 	{
+		bTransitionControl = true;
 		float Visibility = UKismetMaterialLibrary::GetScalarParameterValue(this, PortalCollections[PortalTag - 1], FName("Visibility"));
 		Visibility = 1 - Visibility;
 		bIsPlayerSide = Visibility == 1.0 ? true: false;
@@ -298,6 +315,10 @@ void APortal::TransitCharacter()
 			{
 				PortalActor->Transition(Visibility == 1.0);
 			}
+			else if (APortal* Portal = Cast<APortal>(Actor))
+			{
+				Portal->Transition(Visibility == 1.0);
+			}
 		}
 
 		for (auto& Portal: OtherPortals)
@@ -307,6 +328,7 @@ void APortal::TransitCharacter()
 		// TODO foliage
 
 		ResetSeeActor(nullptr);
+		bTransitionControl = false;
 	}
 }
 

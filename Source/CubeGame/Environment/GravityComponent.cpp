@@ -44,7 +44,7 @@ void UGravityComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		else
 		{
 			const float Mass = Cast<UStaticMeshComponent>(GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass()))->GetMass();
-			Cast<UPrimitiveComponent>(GetOwner()->GetComponentByClass(UPrimitiveComponent::StaticClass()))->AddForce(GravityAccumulator*Mass, EName::None, false);
+			Cast<UStaticMeshComponent>(GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass()))->AddForce(GravityAccumulator*Mass, EName::None, false);
 		}
 		GravityAccumulator = FVector(0, 0, 0);
 		GravityPriority = 0;

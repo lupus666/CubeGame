@@ -136,7 +136,8 @@ void ACubePlayerController::OnHideOccludedActor(const FCameraOccludedActor& Occl
 	{
 		for (int i = 0; i < OccludedActor.StaticMeshComponent->GetNumMaterials(); ++i)
 		{
-			OccludedActor.StaticMeshComponent->SetMaterial(i, FadeMaterial);
+			// OccludedActor.StaticMeshComponent->SetMaterial(i, FadeMaterial);
+			OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 1.0);
 		}
 	}
 }
@@ -158,7 +159,8 @@ void ACubePlayerController::OnShowOccludedActor(const FCameraOccludedActor& Occl
 	{
 		for (int matIdx = 0; matIdx < OccludedActor.Materials.Num(); ++matIdx)
 		{
-			OccludedActor.StaticMeshComponent->SetMaterial(matIdx, OccludedActor.Materials[matIdx]);
+			// OccludedActor.StaticMeshComponent->SetMaterial(matIdx, OccludedActor.Materials[matIdx]);
+			OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 0.0);
 		}
 	}
 	

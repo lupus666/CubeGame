@@ -2,6 +2,7 @@
 
 
 #include "GravityVolumeBase.h"
+#include "CubeGame/Character/CubeGameCharacter.h"
 
 #include "GravityComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -34,7 +35,17 @@ void AGravityVolumeBase::Tick(float DeltaTime)
 		{
 			if (UGravityComponent* GravityComponent = Cast<UGravityComponent>(Actor->GetComponentByClass(UGravityComponent::StaticClass())))
 			{
-				GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
+				if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
+				{
+					if (InSameSide(PortalActor))
+					{
+						GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
+					}
+				}
+				else
+				{
+					GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
+				}
 			}
 		}
 	}

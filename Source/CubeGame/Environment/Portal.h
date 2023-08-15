@@ -75,6 +75,10 @@ protected:
 
 	bool bThroughPortal;
 
+	bool bTransitionControl;
+
+	bool bIsCharacterOverlap;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

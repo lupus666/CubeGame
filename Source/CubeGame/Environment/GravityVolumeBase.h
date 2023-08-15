@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PortalActor.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "GravityVolumeBase.generated.h"
 
 UCLASS()
-class CUBEGAME_API AGravityVolumeBase : public AActor
+class CUBEGAME_API AGravityVolumeBase : public APortalActor
 {
 	GENERATED_BODY()
 	

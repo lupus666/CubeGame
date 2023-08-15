@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PortalActor.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
 #include "WindField.generated.h"
 
 UCLASS()
-class CUBEGAME_API AWindField : public AActor
+class CUBEGAME_API AWindField : public APortalActor
 {
 	GENERATED_BODY()
 	

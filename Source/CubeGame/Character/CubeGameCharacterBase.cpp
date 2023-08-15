@@ -153,8 +153,10 @@ void ACubeGameCharacterBase::MoveForward(float Value)
 	// }
 	if (Value != 0.0f)
 	{
-		const FVector Direction = CameraBoom->GetForwardVector();
-		AddMovementInput(Direction, Value);
+		FVector Direction = CameraBoom->GetForwardVector();
+		Direction = Direction - FVector::DotProduct(Direction, UpVector) * UpVector;
+		// AddMovementInput(Direction, Value);
+		GetCapsuleComponent()->AddForce(Direction.GetSafeNormal() * Value * 2800, EName::None, true);
 	}
 }
 
@@ -173,8 +175,11 @@ void ACubeGameCharacterBase::MoveRight(float Value)
 	// }
 	if (Value != 0.0f)
 	{
-		const FVector Direction = CameraBoom->GetRightVector();
-		AddMovementInput(Direction, Value);
+		FVector Direction = CameraBoom->GetRightVector();
+		Direction = Direction - FVector::DotProduct(Direction, UpVector) * UpVector;
+		GetCapsuleComponent()->AddForce(Direction * Value * 2800, EName::None, true);
+
+		// AddMovementInput(Direction, Value);
 	}
 }
 

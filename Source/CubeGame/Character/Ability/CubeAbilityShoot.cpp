@@ -3,6 +3,8 @@
 
 #include "CubeAbilityShoot.h"
 #include "CubeGame/Character/CubeGameCharacter.h"
+#include "CubeGame/Environment/Portal.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -27,6 +29,9 @@ void ACubeAbilityShoot::FindGrabTarget()
 		FHitResult HitResult;
 		TArray<AActor* > IgnoreObjects = GrabTargets;
 		IgnoreObjects.Add(CubeGameCharacter);
+		TArray<AActor* > Portals;
+		UGameplayStatics::GetAllActorsOfClass(this, APortal::StaticClass(), Portals);
+		IgnoreObjects += Portals;
 		if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, GrabRadius, ObjectTypes,
 			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
 		{
@@ -47,6 +52,10 @@ void ACubeAbilityShoot::ShootGrabTarget()
 		{
 			TArray<AActor*> IgnoreObjects = GrabTargets;
 			IgnoreObjects.Add(CubeGameCharacter);
+			TArray<AActor* > Portals;
+			UGameplayStatics::GetAllActorsOfClass(this, APortal::StaticClass(), Portals);
+			IgnoreObjects += Portals;
+			
 			AActor* Actor = GrabTargets[0];
 			RemoveTarget(Actor);
 

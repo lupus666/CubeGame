@@ -4,6 +4,9 @@
 #include "CubeAbilityGrab.h"
 #include "CubeGame/Character/CubeGameCharacter.h"
 #include "CubeGame/CubePlayerController.h"
+#include "CubeGame/Environment/GravityVolumeBase.h"
+#include "CubeGame/Environment/Portal.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACubeAbilityGrab::ACubeAbilityGrab()
@@ -32,8 +35,15 @@ void ACubeAbilityGrab::FindGrabTarget()
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
 			);
 		FHitResult HitResult;
+		TArray<AActor* > IgnoreObjects({CubeGameCharacter});
+		TArray<AActor* > Portals;
+		UGameplayStatics::GetAllActorsOfClass(this, APortal::StaticClass(), Portals);
+		IgnoreObjects += Portals;
+		// TArray<AActor* > GravityVolumes;
+		// UGameplayStatics::GetAllActorsOfClass(this, AGravityVolumeBase::StaticClass(), GravityVolumes);
+		// IgnoreObjects += GravityVolumes;
 		if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, GrabRadius, ObjectTypes,
-			false, TArray<AActor* >({CubeGameCharacter}), EDrawDebugTrace::None, HitResult, true))
+			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
 		{
 			AActor* Actor = HitResult.GetActor();
 			if (IsValidTarget(Actor))
@@ -52,7 +62,13 @@ void ACubeAbilityGrab::ThrowGrabTarget()
 		if (IsValid(GrabTarget))
 		{
 			TArray<AActor*> IgnoreObjects({GrabTarget, CubeGameCharacter});
-
+			TArray<AActor* > Portals;
+			// TArray<AActor* > GravityVolumes;
+			// UGameplayStatics::GetAllActorsOfClass(this, AGravityVolumeBase::StaticClass(), GravityVolumes);
+			UGameplayStatics::GetAllActorsOfClass(this, APortal::StaticClass(), Portals);
+			IgnoreObjects += Portals;
+			// IgnoreObjects += GravityVolumes;
+			
 			const FVector CameraLocation = CubeGameCharacter->GetFollowCamera()->GetComponentLocation();
 			const FVector CameraForwardVector = CubeGameCharacter->GetFollowCamera()->GetForwardVector();
 			const FVector Start = CameraLocation + ThrowRadius * CameraForwardVector;

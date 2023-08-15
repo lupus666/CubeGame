@@ -26,7 +26,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	bool GetVisbility(bool bIsVisible);
+	bool GetVisibility(bool bIsVisible);
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class APortal* BelongPortal;
@@ -34,6 +34,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<UStaticMeshComponent* > ActorMeshes;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<UShapeComponent* > ShapeComponents;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bVisibility;
 
@@ -47,7 +50,7 @@ protected:
 	bool bIsBackSide;
 
 	bool bIsInversionVisibility;
-	
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -55,6 +58,8 @@ public:
 	void Initialize(APortal* InPortal);
 
 	void InitStaticMesh(UStaticMeshComponent* StaticMeshComponent);
+
+	void InitStaticShape(UShapeComponent* StaticShapeComponent);
 
 	void Transition(bool bIsVisible);
 	
@@ -65,4 +70,6 @@ public:
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, APortal* Portal);
 
 	void EndOverlap(UPrimitiveComponent* OverlappedComponent, APortal* Portal);
+
+	bool InSameSide(const APortalActor* PortalActor) const;
 };

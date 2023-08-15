@@ -292,7 +292,17 @@ void AWindField::Tick(float DeltaTime)
 			{
 				if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
 				{
-					AddWindLoad(Actor);
+					if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
+					{
+						if (InSameSide(PortalActor))
+						{
+							AddWindLoad(Actor);
+						}
+					}
+					else
+					{
+						AddWindLoad(Actor);
+					}
 				}
 			}
 		}

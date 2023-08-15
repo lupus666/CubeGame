@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PortalActor.h"
 #include "GameFramework/Actor.h"
 #include "TransducerBase.generated.h"
 
 UCLASS()
-class CUBEGAME_API ATransducerBase : public AActor
+class CUBEGAME_API ATransducerBase : public APortalActor
 {
 	GENERATED_BODY()
 	
