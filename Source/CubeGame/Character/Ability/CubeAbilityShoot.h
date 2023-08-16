@@ -53,7 +53,7 @@ public:
 	float ShootDamper = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float MaxMass = 2.0f;
+	float MaxMass = 5.0f;
 	
 protected:
 	virtual void BeginPlay() override;

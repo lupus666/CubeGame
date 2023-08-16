@@ -179,7 +179,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 				// UKismetSystemLibrary::PrintString(this, TotalR.ToString());
 				// UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
 				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
-				UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
+				// UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
 				// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 			}
 		}
