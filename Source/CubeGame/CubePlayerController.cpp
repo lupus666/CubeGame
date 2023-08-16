@@ -3,9 +3,13 @@
 
 #include "CubePlayerController.h"
 
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
+#include "Components/Button.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -82,15 +86,71 @@ void ACubePlayerController::SyncOccludedActors()
 	}
 }
 
+void ACubePlayerController::PauseGame()
+{
+	if (PauseWidget)
+	{
+		PauseWidget->AddToViewport();
+		UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(this, PauseWidget);
+		SetShowMouseCursor(true);
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+	}
+}
+
+void ACubePlayerController::ReturnGame()
+{
+	if (PauseWidget != nullptr)
+	{
+		PauseWidget->RemoveFromParent();
+		SetShowMouseCursor(false);
+		UWidgetBlueprintLibrary::SetInputMode_GameOnly(this);
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
+	}
+}
+
+void ACubePlayerController::MainMenu()
+{
+	PauseWidget->RemoveFromParent();
+	SetShowMouseCursor(false);
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this);
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+	UGameplayStatics::OpenLevel(this, "LevelMenu", false);
+}
+
 void ACubePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
- 
+
+	// Occlusion
 	if (IsValid(GetPawn()))
 	{
 		ActiveSpringArm = Cast<USpringArmComponent>(GetPawn()->GetComponentByClass<USpringArmComponent>());
 		ActiveCamera = Cast<UCameraComponent>(GetPawn()->GetComponentByClass<UCameraComponent>());
 		ActiveCapsuleComponent = Cast<UCapsuleComponent>(GetPawn()->GetComponentByClass<UCapsuleComponent>());
+	}
+
+	// Widget setting
+	if (PauseWidgetClass)
+	{
+		PauseWidget = CreateWidget<UUserWidget>(this, PauseWidgetClass);
+		if (PauseWidget)
+		{
+			MainMenuButton = Cast<UButton>(PauseWidget->GetWidgetFromName(FName("MainMenuButton")));
+			ReturnGameButton = Cast<UButton>(PauseWidget->GetWidgetFromName(FName("ReturnGameButton")));
+		}
+		
+		if (MainMenuButton)
+		{
+			MainMenuButton->OnClicked.AddDynamic(this, &ACubePlayerController::MainMenu);
+		}
+		if (ReturnGameButton)
+		{
+			ReturnGameButton->OnClicked.AddDynamic(this, &ACubePlayerController::ReturnGame);
+		}
+		if (InputComponent != nullptr)
+		{
+			InputComponent->BindAction("Pause", IE_Pressed, this, &ACubePlayerController::PauseGame);
+		}
 	}
 }
 

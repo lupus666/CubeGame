@@ -37,9 +37,31 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SyncOccludedActors();
+
+	UFUNCTION()
+	void PauseGame();
+
+	UFUNCTION()
+	void ReturnGame();
+
+	UFUNCTION()
+	void MainMenu();
+	
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UUserWidget> PauseWidgetClass;
+
+	UPROPERTY()
+	class UUserWidget* PauseWidget;
+
+	UPROPERTY()
+	class UButton* ReturnGameButton;
+
+	UPROPERTY()
+	class UButton* MainMenuButton;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera Occlusion", meta=(ClampMin="0.1", ClampMax="10.0") )
 	float CapsulePercentageForTrace;
   

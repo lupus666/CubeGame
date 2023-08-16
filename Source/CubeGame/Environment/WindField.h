@@ -29,8 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USceneCaptureComponent2D* SceneCaptureNormal;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UTextureRenderTarget2D* RTNormalMap;
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// UTextureRenderTarget2D* RTNormalMap;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WindSpeed;

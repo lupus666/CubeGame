@@ -92,7 +92,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 			SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
 			SceneCaptureDepth->CaptureScene();
 
-			// UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+			UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
 			SceneCaptureNormal->ShowOnlyActors.Empty();
 			SceneCaptureNormal->ShowOnlyActors.Add(Actor);
 			SceneCaptureNormal->TextureTarget = RTNormalMap;
