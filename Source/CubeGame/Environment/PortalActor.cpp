@@ -4,6 +4,8 @@
 #include "PortalActor.h"
 #include "Portal.h"
 #include "Components/ShapeComponent.h"
+#include "CubeGame/CubePlayerState.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -206,25 +208,71 @@ void APortalActor::EndOverlap(UPrimitiveComponent* OverlappedComponent, APortal*
 	}
 }
 
-bool APortalActor::InSameSide(const APortalActor* PortalActor) const
+bool APortalActor::IsForceValid(const APortalActor* PortalActor) const
 {
+	bool bIsForceMerge = false;
+	bool bIsActorMerge = false;
+	bool ForceSide = bIsInversed? bIsInversionVisibility: !bIsInversionVisibility;
+	bool ActorSide = PortalActor->bIsInversed? PortalActor->bIsInversionVisibility: !PortalActor->bIsInversionVisibility;
+	TSet<int> MergePortals;
+	if (ACubePlayerState* CubePlayerState = Cast<ACubePlayerState>(UGameplayStatics::GetPlayerState(this, 0)))
+	{
+		MergePortals = CubePlayerState->GetInPortals();
+	}
 	TArray<FName> OtherTags = PortalActor->Tags;
+	// Zero World Force
 	if (Tags.Num() == 0)
 	{
 		return true;
 	}
-	if (OtherTags.Num() == 0)
+	else
 	{
-		return false;
-	}
-
-	for (auto& Tag: OtherTags)
-	{
-		if (Tags.Contains(Tag))
+		for (auto& Tag : Tags)
 		{
-			return PortalActor->bIsBackSide == bIsBackSide;
+			TArray<FString> ParsedName;
+			Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
+			if (MergePortals.Contains(UKismetStringLibrary::Conv_StringToInt(ParsedName.Top())))
+			{
+				bIsForceMerge = true;
+			}
 		}
 	}
+	// Zero Actor
+	if (OtherTags.Num() == 0)
+	{
+		if (bIsForceMerge)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		for (auto& Tag: OtherTags)
+		{
+			TArray<FString> ParsedName;
+			Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
+			if (MergePortals.Contains(UKismetStringLibrary::Conv_StringToInt(ParsedName.Top())))
+			{
+				bIsActorMerge = true;
+			}
+			// Actor and Force in the Same World
+			if (Tags.Contains(Tag))
+			{
+				return ForceSide == ActorSide;
+			}
+		}
+	}
+
+	// Actor and Force in Merge World
+	if (bIsForceMerge && bIsActorMerge)
+	{
+		return ForceSide == ActorSide;
+	}
+
 	return false;
 }
 

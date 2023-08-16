@@ -71,5 +71,5 @@ public:
 
 	void EndOverlap(UPrimitiveComponent* OverlappedComponent, APortal* Portal);
 
-	bool InSameSide(const APortalActor* PortalActor) const;
+	bool IsForceValid(const APortalActor* PortalActor) const;
 };

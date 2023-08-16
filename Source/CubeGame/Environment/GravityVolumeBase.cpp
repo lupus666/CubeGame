@@ -37,7 +37,7 @@ void AGravityVolumeBase::Tick(float DeltaTime)
 			{
 				if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
 				{
-					if (InSameSide(PortalActor))
+					if (IsForceValid(PortalActor))
 					{
 						GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
 					}

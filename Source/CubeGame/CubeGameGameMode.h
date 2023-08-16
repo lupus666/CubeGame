@@ -13,6 +13,12 @@ class ACubeGameGameMode : public AGameModeBase
 
 public:
 	ACubeGameGameMode();
+
+	UFUNCTION()
+	void Respawn(AActor* Actor);
+
+protected:
+	virtual void BeginPlay() override;
 };
 
 

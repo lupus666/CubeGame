@@ -294,7 +294,7 @@ void AWindField::Tick(float DeltaTime)
 				{
 					if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
 					{
-						if (InSameSide(PortalActor))
+						if (IsForceValid(PortalActor))
 						{
 							AddWindLoad(Actor);
 						}

@@ -121,22 +121,9 @@ TArray<AActor*> ACubeAbilityBase::FilterTargets(TArray<AActor*>& Targets)
 	TSet<AActor*> FilteredTargets;
 	for(auto& Actor: Targets)
 	{
-		if (IsValid(Actor))
+		if (IsValidTarget(Actor))
 		{
-			if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
-			{
-				if (StaticMeshComponent->IsSimulatingPhysics())
-				{
-					FilteredTargets.Add(Actor);
-				}
-			}
-			else if (USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
-			{
-				if (SkeletalMeshComponent->IsSimulatingPhysics())
-				{
-					FilteredTargets.Add(Actor);
-				}
-			}
+			FilteredTargets.Add(Actor);
 		}
 	}
 	return TArray<AActor*>(FilteredTargets.Array());

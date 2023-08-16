@@ -6,6 +6,8 @@
 #include "PortalActor.h"
 #include "WindField.h"
 #include "Components/BoxComponent.h"
+#include "CubeGame/CubeGameStateBase.h"
+#include "CubeGame/CubePlayerState.h"
 #include "CubeGame/Character/CubeGameCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -27,7 +29,20 @@ APortal::APortal()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>("Box");
 	BoxComponent->SetupAttachment(RootComponent);
 
-	// TODO Debug
+
+}
+
+// Called when the game starts or when spawned
+void APortal::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ACubeGameStateBase* CubeGameStateBase = Cast<ACubeGameStateBase>(GetWorld()->GetGameState()))
+	{
+		PortalCollections = CubeGameStateBase->GetPortalCollections();
+	}
+
+	
 	TArray<AActor*> Portals;
 	UGameplayStatics::GetAllActorsOfClass(this, PortalClass, Portals);
 	for (auto& Actor: Portals)
@@ -46,15 +61,9 @@ APortal::APortal()
 		{
 			Portal->bIsActive = false;
 		}
-		// TODO copy foliage
+		// TODO foliage
 	}
-}
-
-// Called when the game starts or when spawned
-void APortal::BeginPlay()
-{
-	Super::BeginPlay();
-
+	
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &APortal::BeginOverlap);
 	BoxComponent->OnComponentEndOverlap.AddDynamic(this, &APortal::EndOverlap);
 	
@@ -100,11 +109,20 @@ void APortal::BeginPlay()
 void APortal::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bCanItemsOverlap)
+	if (bCanItemsOverlap && bIsActive)
 	{
 		if (APortalActor* PortalActor = Cast<APortalActor>(OtherActor))
 		{
-			PortalActor->BeginOverlap(OtherComp, this);
+			for (auto& Tag: PortalActor->Tags)
+			{
+				TArray<FString> ParsedName;
+				Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
+				if (UKismetStringLibrary::Conv_StringToInt(ParsedName.Top()) == PortalTag)
+				{
+					PortalActor->BeginOverlap(OtherComp, this);
+					break;
+				}
+			}
 		}
 		if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
 		{
@@ -120,11 +138,20 @@ void APortal::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 void APortal::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (bCanItemsOverlap)
+	if (bCanItemsOverlap && bIsActive)
 	{
 		if (APortalActor* PortalActor = Cast<APortalActor>(OtherActor))
 		{
-			PortalActor->EndOverlap(OtherComp, this);
+			for (auto& Tag: PortalActor->Tags)
+			{
+				TArray<FString> ParsedName;
+				Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
+				if (UKismetStringLibrary::Conv_StringToInt(ParsedName.Top()) == PortalTag)
+				{
+					PortalActor->EndOverlap(OtherComp, this);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -309,6 +336,10 @@ void APortal::TransitCharacter()
 		Visibility = 1 - Visibility;
 		bIsPlayerSide = Visibility == 1.0 ? true: false;
 		UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollections[PortalTag - 1], FName("Visibility"), Visibility);
+		if (ACubePlayerState* CubePlayerState = Cast<ACubePlayerState>(UGameplayStatics::GetPlayerState(this, 0)))
+		{
+			CubePlayerState->UpdatePortalState();
+		}
 		for (auto& Actor: PortalActors)
 		{
 			if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
