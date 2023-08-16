@@ -7,6 +7,7 @@
 #include "WindComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -77,105 +78,110 @@ void AWindField::AddWindLoad(AActor* Actor)
 		// Whole cubes as a rigid body
 		else
 		{
-			// Get Cube BoundingBox
-			const FBox Bounds = CubeGameCharacter->GetMesh()->Bounds.GetBox();
-			constexpr float CaptureDistance = 80.0f;
-			const FVector GravityCenter = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
-			const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
-			
-			UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
-			SceneCaptureDepth->ShowOnlyActors.Empty();
-			SceneCaptureDepth->ShowOnlyActors.Add(Actor);
-			SceneCaptureDepth->TextureTarget = RTDepthMap;
-			SceneCaptureDepth->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
-			SceneCaptureDepth->SetWorldLocation(CaptureLocation);
-			SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
-			SceneCaptureDepth->CaptureScene();
-
-			UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
-			SceneCaptureNormal->ShowOnlyActors.Empty();
-			SceneCaptureNormal->ShowOnlyActors.Add(Actor);
-			SceneCaptureNormal->TextureTarget = RTNormalMap;
-			SceneCaptureNormal->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
-			SceneCaptureNormal->SetWorldLocation(CaptureLocation);
-			SceneCaptureNormal->SetWorldRotation(WindDirection.Rotation());
-			SceneCaptureNormal->CaptureScene();
-			
-			//TODO performance optimization
-			FRenderTarget* RenderTargetDepth = RTDepthMap->GameThread_GetRenderTargetResource();
-			TArray<FColor> PixelsDepth;
-			FReadSurfaceDataFlags ReadPixelFlags(RCM_MinMax);
-			RenderTargetDepth->ReadPixels(PixelsDepth, ReadPixelFlags);
-
-			FRenderTarget* RenderTargetNormal = RTNormalMap->GameThread_GetRenderTargetResource();
-			TArray<FFloat16Color> PixelsNormal;
-			RenderTargetNormal->ReadFloat16Pixels(PixelsNormal);
-
-			const FIntPoint TextureSize = RenderTargetNormal->GetSizeXY();
-			
-			// FMatrix ViewRotationMatrix = FLookAtMatrix(CaptureLocation, GravityCenter, UKismetMathLibrary::GetUpVector(WindDirection));
-			// FMatrix ProjectionMatrix = FReversedZOrthoMatrix(SceneCaptureComponent2D->OrthoWidth/2.0f,SceneCaptureComponent2D->OrthoWidth/2.0f, 2.0f/WORLD_MAX, WORLD_MAX);
+			// if (TickCounter >= 5)
 			{
-				// FMatrix ViewProjectionMatrix = ViewRotationMatrix * ProjectionMatrix;
-				// FVector4 CameraPosition = ViewProjectionMatrix.TransformFVector4(FVector4(GravityCenter.X, GravityCenter.Y, GravityCenter.Z, 1.0f));
-				// FVector4 ScreenPosition = CameraPosition/CameraPosition.W;
-				// ScreenPosition.X = ScreenPosition.X / 2 + 0.5f;
-				// ScreenPosition.Y = ScreenPosition.Y / 2 + 0.5f;
-				// FIntPoint PixelPosition(FMath::RoundToInt(ScreenPosition.X * TextureSize.X), FMath::RoundToInt(ScreenPosition.Y * TextureSize.Y));
-				// UKismetSystemLibrary::PrintString(this, PixelPosition.ToString());
-			}
-			float PixelX = SceneCaptureDepth->OrthoWidth / TextureSize.X * 0.01; 
-			float PixelY = SceneCaptureDepth->OrthoWidth / TextureSize.Y * 0.01;
-			float PixelArea = PixelX * PixelY;
+				TickCounter = 0;
+				
+				// Get Cube BoundingBox
+				const FBox Bounds = CubeGameCharacter->GetMesh()->Bounds.GetBox();
+				constexpr float CaptureDistance = 80.0f;
+				const FVector GravityCenter = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
+				const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
+			
+				UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+				SceneCaptureDepth->ShowOnlyActors.Empty();
+				SceneCaptureDepth->ShowOnlyActors.Add(Actor);
+				SceneCaptureDepth->TextureTarget = RTDepthMap;
+				SceneCaptureDepth->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
+				SceneCaptureDepth->SetWorldLocation(CaptureLocation);
+				SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
+				SceneCaptureDepth->CaptureScene();
 
-			int PixelCount = 0;
-			FVector TotalR = FVector(0, 0, 0);
-			FVector TotalForce = FVector(0, 0, 0);
-			for (int i = 0; i < TextureSize.X; i++)
-			{
-				for (int j = 0; j < TextureSize.Y; j++)
+				UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+				SceneCaptureNormal->ShowOnlyActors.Empty();
+				SceneCaptureNormal->ShowOnlyActors.Add(Actor);
+				SceneCaptureNormal->TextureTarget = RTNormalMap;
+				SceneCaptureNormal->OrthoWidth = UKismetMathLibrary::Max(Bounds.GetSize().X*1.732, Bounds.GetSize().Y*1.732);
+				SceneCaptureNormal->SetWorldLocation(CaptureLocation);
+				SceneCaptureNormal->SetWorldRotation(WindDirection.Rotation());
+				SceneCaptureNormal->CaptureScene();
+			
+				//TODO performance optimization
+				FRenderTarget* RenderTargetDepth = RTDepthMap->GameThread_GetRenderTargetResource();
+				TArray<FColor> PixelsDepth;
+				FReadSurfaceDataFlags ReadPixelFlags(RCM_MinMax);
+				RenderTargetDepth->ReadPixels(PixelsDepth, ReadPixelFlags);
+
+				FRenderTarget* RenderTargetNormal = RTNormalMap->GameThread_GetRenderTargetResource();
+				TArray<FFloat16Color> PixelsNormal;
+				RenderTargetNormal->ReadFloat16Pixels(PixelsNormal);
+
+				const FIntPoint TextureSize = RenderTargetNormal->GetSizeXY();
+			
+				// FMatrix ViewRotationMatrix = FLookAtMatrix(CaptureLocation, GravityCenter, UKismetMathLibrary::GetUpVector(WindDirection));
+				// FMatrix ProjectionMatrix = FReversedZOrthoMatrix(SceneCaptureComponent2D->OrthoWidth/2.0f,SceneCaptureComponent2D->OrthoWidth/2.0f, 2.0f/WORLD_MAX, WORLD_MAX);
 				{
-					if (PixelsDepth[i * TextureSize.Y + j] != FColor::Black)
+					// FMatrix ViewProjectionMatrix = ViewRotationMatrix * ProjectionMatrix;
+					// FVector4 CameraPosition = ViewProjectionMatrix.TransformFVector4(FVector4(GravityCenter.X, GravityCenter.Y, GravityCenter.Z, 1.0f));
+					// FVector4 ScreenPosition = CameraPosition/CameraPosition.W;
+					// ScreenPosition.X = ScreenPosition.X / 2 + 0.5f;
+					// ScreenPosition.Y = ScreenPosition.Y / 2 + 0.5f;
+					// FIntPoint PixelPosition(FMath::RoundToInt(ScreenPosition.X * TextureSize.X), FMath::RoundToInt(ScreenPosition.Y * TextureSize.Y));
+					// UKismetSystemLibrary::PrintString(this, PixelPosition.ToString());
+				}
+				float PixelX = SceneCaptureDepth->OrthoWidth / TextureSize.X * 0.01; 
+				float PixelY = SceneCaptureDepth->OrthoWidth / TextureSize.Y * 0.01;
+				float PixelArea = PixelX * PixelY;
+
+				int PixelCount = 0;
+				FVector TotalR = FVector(0, 0, 0);
+				FVector TotalForce = FVector(0, 0, 0);
+				for (int i = 0; i < TextureSize.X; i++)
+				{
+					for (int j = 0; j < TextureSize.Y; j++)
 					{
-						PixelCount += 1;
-						FVector PixelNormal = FVector(PixelsNormal[i * TextureSize.Y + j].GetFloats()).GetSafeNormal();
-						TotalForce += CalcWindLoadByArea(PixelArea) * FVector::DotProduct(-PixelNormal, WindDirection.GetSafeNormal()) * -PixelNormal;
-						TotalR += FVector(i + 0.5 - TextureSize.X/2.0f, j + 0.5 - TextureSize.Y/2.0f, 0);
+						if (PixelsDepth[i * TextureSize.Y + j] != FColor::Black)
+						{
+							PixelCount += 1;
+							FVector PixelNormal = FVector(PixelsNormal[i * TextureSize.Y + j].GetFloats()).GetSafeNormal();
+							TotalForce += CalcWindLoadByArea(PixelArea) * FVector::DotProduct(-PixelNormal, WindDirection.GetSafeNormal()) * -PixelNormal;
+							TotalR += FVector(i + 0.5 - TextureSize.X/2.0f, j + 0.5 - TextureSize.Y/2.0f, 0);
+						}
 					}
 				}
-			}
 			
-			{
-			// 	FVector PixelPosition = TotalR + FVector(RenderTarget->GetSizeXY().X, RenderTarget->GetSizeXY().Y, 0.0f);
-			// 	PixelPosition = FVector(256, 256, 0);
-			// 	FVector2D ScreenPosition(PixelPosition.X/TextureSize.X, PixelPosition.Y/TextureSize.Y);
-			// 	FVector4 ClipPosition(ScreenPosition.X*2.0f-1.0f, ScreenPosition.Y*2.0f-1.0f, CaptureDistance, 1.0f);
-			// 	FMatrix InverseViewProjectionMatrix = ProjectionMatrix.Inverse() * ViewRotationMatrix.Inverse();
-			// 	FVector4 WorldPosition = InverseViewProjectionMatrix.TransformFVector4(ClipPosition);
-			// 	UKismetSystemLibrary::PrintString(this, WorldPosition.ToString());
+				{
+					// 	FVector PixelPosition = TotalR + FVector(RenderTarget->GetSizeXY().X, RenderTarget->GetSizeXY().Y, 0.0f);
+					// 	PixelPosition = FVector(256, 256, 0);
+					// 	FVector2D ScreenPosition(PixelPosition.X/TextureSize.X, PixelPosition.Y/TextureSize.Y);
+					// 	FVector4 ClipPosition(ScreenPosition.X*2.0f-1.0f, ScreenPosition.Y*2.0f-1.0f, CaptureDistance, 1.0f);
+					// 	FMatrix InverseViewProjectionMatrix = ProjectionMatrix.Inverse() * ViewRotationMatrix.Inverse();
+					// 	FVector4 WorldPosition = InverseViewProjectionMatrix.TransformFVector4(ClipPosition);
+					// 	UKismetSystemLibrary::PrintString(this, WorldPosition.ToString());
+				}
+
+				//TODO Total lever arm BUG
+				FVector RightVector = SceneCaptureDepth->GetRightVector();
+				FVector UpVector = SceneCaptureDepth->GetUpVector();
+				FVector RVector = -TotalR.X * PixelX * UpVector + TotalR.Y * PixelY * RightVector;
+
+				//TODO fix
+				// const float SurfaceArea = PixelCount * PixelArea;
+				// const FVector TotalForce = CalcWindLoadByArea(SurfaceArea);
+
+				//TODO deduce
+				const FVector TotalTorque = UKismetMathLibrary::Cross_VectorVector(RVector, TotalForce);
+				CubeGameCharacter->GetMesh()->AddForce(TotalForce);
+				// CubeGameCharacter->GetMesh()->AddTorqueInRadians(TotalTorque);
+
+				// UKismetSystemLibrary::PrintString(this, TextureSize.ToString());
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_IntToString(PixelCount));
+				// UKismetSystemLibrary::PrintString(this, TotalR.ToString());
+				// UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
+				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
+				UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
+				// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 			}
-
-			//TODO Total lever arm BUG
-			FVector RightVector = SceneCaptureDepth->GetRightVector();
-			FVector UpVector = SceneCaptureDepth->GetUpVector();
-			FVector RVector = -TotalR.X * PixelX * UpVector + TotalR.Y * PixelY * RightVector;
-
-			//TODO fix
-			// const float SurfaceArea = PixelCount * PixelArea;
-			// const FVector TotalForce = CalcWindLoadByArea(SurfaceArea);
-
-			//TODO deduce
-			const FVector TotalTorque = UKismetMathLibrary::Cross_VectorVector(RVector, TotalForce);
-			CubeGameCharacter->GetMesh()->AddForce(TotalForce);
-			// CubeGameCharacter->GetMesh()->AddTorqueInRadians(TotalTorque);
-
-			// UKismetSystemLibrary::PrintString(this, TextureSize.ToString());
-			// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_IntToString(PixelCount));
-			// UKismetSystemLibrary::PrintString(this, TotalR.ToString());
-			// UKismetSystemLibrary::PrintString(this, (GravityCenter+RVector).ToString());
-			// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_DoubleToString(SurfaceArea));
-			UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
-			// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 		}
 	}
 	else if (UStaticMeshComponent* StaticMesh = Actor->GetComponentByClass<UStaticMeshComponent>())
@@ -266,6 +272,7 @@ void AWindField::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	TickCounter += 1;
 	if (!bIsDirectionalWind)
 	{
 		

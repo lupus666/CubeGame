@@ -67,7 +67,7 @@ void APortal::BeginPlay()
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &APortal::BeginOverlap);
 	BoxComponent->OnComponentEndOverlap.AddDynamic(this, &APortal::EndOverlap);
 	
-	if (bIsActive)
+	if (!bIsActive)
 	{
 		PortalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
