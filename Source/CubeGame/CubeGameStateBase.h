@@ -25,13 +25,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UMaterialParameterCollection* > PortalCollections;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterialParameterCollection*  PortalCollectionSingle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int PortalCount;
 
 public:
 	TArray<UMaterialParameterCollection*> GetPortalCollections() const
 	{
 		return PortalCollections;
+	}
+
+	UMaterialParameterCollection* GetPortalCollectionSingle() const
+	{
+		return PortalCollectionSingle;
 	}
 
 	int GetPortalCount() const

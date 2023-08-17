@@ -113,22 +113,24 @@ void ACubeMountCharacter::UnMount()
 
 void ACubeMountCharacter::TimeDilation()
 {
-	if (bTimeDilation)
-	{
-		DilationTimelineComponent->Reverse();
-		bTimeDilation = false;
-	}
-	else
-	{
-		DilationTimelineComponent->Play();
-		bTimeDilation = true;
-	}
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.2);
+	CustomTimeDilation = 1.0 / 0.2;
+	// if (bTimeDilation)
+	// {
+	// 	DilationTimelineComponent->Reverse();
+	// 	bTimeDilation = false;
+	// }
+	// else
+	// {
+	// 	DilationTimelineComponent->Play();
+	// 	bTimeDilation = true;
+	// }
 }
 
 void ACubeMountCharacter::OnDilationTimelineTick(float Value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, Value);
-	CustomTimeDilation = 1.0;
+	CustomTimeDilation = 1.0 / Value;
 }
 
 void ACubeMountCharacter::BeginTighten()
@@ -209,7 +211,6 @@ void ACubeMountCharacter::OnTightenTimelineTick(float Value)
 void ACubeMountCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	if (CubeMountCharacter)
 	{
 		CubeMountCharacter->CurrentRelaxRate = CurrentRelaxRate;

@@ -29,19 +29,19 @@ public:
 	int MaxTargets = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float GrabDistance = 1000.0f;
+	float GrabDistance = 3000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float GrabRadius = 10.0f;
+	float GrabRadius = 20.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldXY = 100.0f;
+	float HoldXY = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldZ = 50.0f;
+	float HoldZ = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ShootDistance = 2000.0f;
+	float ShootDistance = 6000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ShootRadius = 5.0f;
@@ -53,7 +53,7 @@ public:
 	float ShootDamper = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float MaxMass = 5.0f;
+	float MaxMass = 10.0f;
 	
 protected:
 	virtual void BeginPlay() override;

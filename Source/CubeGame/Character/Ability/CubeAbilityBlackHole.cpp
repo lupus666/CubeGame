@@ -8,7 +8,7 @@
 ACubeAbilityBlackHole::ACubeAbilityBlackHole()
 {
 	SphereComponent = CreateDefaultSubobject<USphereComponent>("Sphere");
-	
+	// SphereComponent->SetCollisionProfileName(FName(""));
 }
 
 void ACubeAbilityBlackHole::BeginPlay()

@@ -71,7 +71,7 @@ void APortalActor::InitStaticMesh(UStaticMeshComponent* StaticMeshComponent)
 		else
 		{
 			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			StaticMeshComponent->SetCollisionProfileName(FName("MeshNoCube"));
+			StaticMeshComponent->SetCollisionProfileName(FName("MeshNoCube" + Tags[0].ToString()));
 		}
 		bVisibility = bIsInversed;
 	}
@@ -115,13 +115,25 @@ void APortalActor::TransitActor()
 	}
 }
 
-void APortalActor::Seen(bool bIsVisible)
+void APortalActor::Seen_Implementation(bool bIsVisible)
 {
 	if (!bTransition)
 	{
 		bVisibility = GetVisibility(bIsVisible);
 		// ECollisionEnabled::Type CollisionType = bVisibility ? ECollisionEnabled::QueryAndPhysics: ECollisionEnabled::QueryAndPhysics;
-		FName MeshProfileName = bVisibility ? FName("PhysicsActor"): FName("MeshNoCube");
+		FName MeshProfileName = bVisibility ? FName("PhysicsActor"): FName("MeshNoCube" + Tags[0].ToString());
+		if (bVisibility && (bIsInversed? bIsInversionVisibility: !bIsInversionVisibility))
+		{
+			MeshProfileName = FName("PhysicsActor" + Tags[0].ToString());
+		}
+		else if (bVisibility)
+		{
+			MeshProfileName = FName("PhysicsActor");
+		}
+		else
+		{
+			MeshProfileName = FName("MeshNoCube" + Tags[0].ToString());
+		}
 		FName CollisionProfileName = bVisibility ? FName("OverlapAll"): FName("CollisionNoCube");
 		for (auto& StaticMesh: ActorMeshes)
 		{
@@ -273,6 +285,22 @@ bool APortalActor::IsForceValid(const APortalActor* PortalActor) const
 		return ForceSide == ActorSide;
 	}
 
+	return false;
+}
+
+bool APortalActor::IsActorValid(const AActor* Actor)
+{
+	if (IsValid(Actor))
+	{
+		if (const USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
+		{
+			return SkeletalMeshComponent->IsSimulatingPhysics();
+		}
+		if (const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
+		{
+			return StaticMeshComponent->IsSimulatingPhysics();
+		}
+	}
 	return false;
 }
 

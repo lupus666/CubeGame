@@ -27,8 +27,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<APortal> PortalClass;
 
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	// TArray<UMaterialParameterCollection* > PortalCollections;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<UMaterialParameterCollection* > PortalCollections;
+	UMaterialParameterCollection* PortalCollectionSingle;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int PortalCount;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int PortalTag;

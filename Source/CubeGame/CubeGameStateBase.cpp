@@ -5,12 +5,12 @@
 
 ACubeGameStateBase::ACubeGameStateBase()
 {
-	PortalCount = PortalCollections.Num();
+	// PortalCount = PortalCollections.Num();
 }
 
 void ACubeGameStateBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PortalCount = PortalCollections.Num();
+	// PortalCount = PortalCollections.Num();
 }

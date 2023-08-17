@@ -5,6 +5,7 @@
 #include "CubeGame/Character/CubeGameCharacter.h"
 
 #include "GravityComponent.h"
+#include "CubeGame/Character/Ability/CubeAbilityBase.h"
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
@@ -33,18 +34,21 @@ void AGravityVolumeBase::Tick(float DeltaTime)
 		Component->GetOverlappingActors(OverlappingActors);
 		for (auto& Actor : OverlappingActors)
 		{
-			if (UGravityComponent* GravityComponent = Cast<UGravityComponent>(Actor->GetComponentByClass(UGravityComponent::StaticClass())))
+			if (IsActorValid(Actor))
 			{
-				if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
+				if (UGravityComponent* GravityComponent = Cast<UGravityComponent>(Actor->GetComponentByClass(UGravityComponent::StaticClass())))
 				{
-					if (IsForceValid(PortalActor))
+					if (APortalActor* PortalActor = Cast<APortalActor>(Actor))
+					{
+						if (IsForceValid(PortalActor))
+						{
+							GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
+						}
+					}
+					else
 					{
 						GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
 					}
-				}
-				else
-				{
-					GravityComponent->AddGravity(GetGravityDirection()*GravityAccelerate, GravityPriority);
 				}
 			}
 		}

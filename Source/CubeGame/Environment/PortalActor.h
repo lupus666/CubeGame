@@ -65,11 +65,17 @@ public:
 	
 	void TransitActor();
 
+	UFUNCTION(BlueprintNativeEvent)
 	void Seen(bool bIsVisible);
+
+	UFUNCTION(BlueprintCallable)
+	void Seen_Implementation(bool bIsVisible);
 
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, APortal* Portal);
 
 	void EndOverlap(UPrimitiveComponent* OverlappedComponent, APortal* Portal);
 
 	bool IsForceValid(const APortalActor* PortalActor) const;
+
+	static bool IsActorValid(const AActor* Actor);
 };

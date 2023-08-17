@@ -43,7 +43,7 @@ void ACubeAbilityGrab::FindGrabTarget()
 		// UGameplayStatics::GetAllActorsOfClass(this, AGravityVolumeBase::StaticClass(), GravityVolumes);
 		// IgnoreObjects += GravityVolumes;
 		if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, GrabRadius, ObjectTypes,
-			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
+			false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
 		{
 			AActor* Actor = HitResult.GetActor();
 			if (IsValidTarget(Actor))

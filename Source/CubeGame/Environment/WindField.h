@@ -58,6 +58,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator MaxWindRotator;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsActivate;
 	
 protected:
 	// Called when the game starts or when spawned

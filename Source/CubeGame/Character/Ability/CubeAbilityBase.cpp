@@ -104,13 +104,20 @@ bool ACubeAbilityBase::IsValidTarget(AActor* Actor)
 {
 	if (IsValid(Actor))
 	{
+		
 		if (const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
 		{
-			return StaticMeshComponent->IsSimulatingPhysics();
+			if (StaticMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
+			{
+				return StaticMeshComponent->IsSimulatingPhysics();
+			}
 		}
 		else if (const USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
 		{
-			return SkeletalMeshComponent->IsSimulatingPhysics();
+			if (SkeletalMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
+			{
+				return SkeletalMeshComponent->IsSimulatingPhysics();
+			}
 		}
 	}
 	return false;

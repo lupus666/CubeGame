@@ -39,7 +39,9 @@ void APortal::BeginPlay()
 
 	if (ACubeGameStateBase* CubeGameStateBase = Cast<ACubeGameStateBase>(GetWorld()->GetGameState()))
 	{
-		PortalCollections = CubeGameStateBase->GetPortalCollections();
+		// PortalCollections = CubeGameStateBase->GetPortalCollections();
+		PortalCollectionSingle = CubeGameStateBase->GetPortalCollectionSingle();
+		PortalCount = CubeGameStateBase->GetPortalCount();
 	}
 
 	
@@ -99,9 +101,10 @@ void APortal::BeginPlay()
 	//TODO debug
 	if (bCanEnter && !bIsActive)
 	{
-		if (PortalTag <= PortalCollections.Num())
+		if (PortalTag <= PortalCount)
 		{
-			UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollections[PortalTag - 1], FName("Visibility"), bIsActive);
+			UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollectionSingle,
+				FName(FString("Visibility") + FString::FromInt(PortalTag)), bIsActive);
 		}
 	}
 }
@@ -205,37 +208,37 @@ void APortal::Tick(float DeltaTime)
 		}
 
 		//Setup MPC
-		if (PortalTag <= PortalCollections.Num())
+		if (PortalTag <= PortalCount)
 		{
-			UMaterialParameterCollection* MPC = PortalCollections[PortalTag - 1];
+			UMaterialParameterCollection* MPC = PortalCollectionSingle;
 			FVector UpDelta = UKismetMathLibrary::GetUpVector(UKismetMathLibrary::MakeRotFromXY(bIsBackSide ? CameraLocation - PlaneUp: PlaneUp - CameraLocation, PortalRightVector));
 			FVector UpStart = PlaneUp + UpDelta * PortalRange;
 			FVector UpFinish = UpStart + UpDelta;
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpStart"), FLinearColor(UpStart));
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpFinish"), FLinearColor(UpFinish));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpStart" + FString::FromInt(PortalTag)), FLinearColor(UpStart));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("UpFinish" + FString::FromInt(PortalTag)), FLinearColor(UpFinish));
 			
 			FVector BottomDelta = -UKismetMathLibrary::GetUpVector(UKismetMathLibrary::MakeRotFromXY(bIsBackSide ? CameraLocation - PlaneBottom: PlaneBottom - CameraLocation, PortalRightVector));
 			FVector BottomStart = BottomDelta * PortalRange + PlaneBottom;
 			FVector BottomFinish = BottomStart + BottomDelta;
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomStart"), FLinearColor(BottomStart));
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomFinish"), FLinearColor(BottomFinish));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomStart" + FString::FromInt(PortalTag)), FLinearColor(BottomStart));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BottomFinish" + FString::FromInt(PortalTag)), FLinearColor(BottomFinish));
 			
 			FVector BackStart = PortalForwardVector * PortalRange * (bIsBackSide? 1: -1) + PortalLocation;
 			FVector BackFinish = PortalForwardVector * PortalViewDistance * (bIsBackSide? 1: -1) + PortalLocation;
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackStart"), FLinearColor(BackStart));
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackFinish"), FLinearColor(BackFinish));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackStart" + FString::FromInt(PortalTag)), FLinearColor(BackStart));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("BackFinish" + FString::FromInt(PortalTag)), FLinearColor(BackFinish));
 			FVector LeftDelta = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromXZ(PlaneLeft - CameraLocation, PortalUpVector));
 			
 			FVector LeftStart = LeftDelta * PortalRange * (bIsBackSide? 1:-1) + PlaneLeft;
 			FVector LeftFinish = LeftStart + LeftDelta * (bIsBackSide? 1:-1);
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftStart"), FLinearColor(LeftStart));
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftFinish"), FLinearColor(LeftFinish));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftStart" + FString::FromInt(PortalTag)), FLinearColor(LeftStart));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("LeftFinish" + FString::FromInt(PortalTag)), FLinearColor(LeftFinish));
 
 			FVector RightDelta = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromXZ(PlaneRight - CameraLocation, PortalUpVector));
 			FVector RightStart = RightDelta * PortalRange * (bIsBackSide? -1:1) + PlaneRight;
 			FVector RightFinish = RightDelta * (bIsBackSide? -1:1) + RightStart;
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightStart"), FLinearColor(RightStart));
-			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightFinish"), FLinearColor(RightFinish));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightStart" + FString::FromInt(PortalTag)), FLinearColor(RightStart));
+			UKismetMaterialLibrary::SetVectorParameterValue(this, MPC, FName("RightFinish" + FString::FromInt(PortalTag)), FLinearColor(RightFinish));
 			
 		}
 
@@ -264,7 +267,7 @@ void APortal::Tick(float DeltaTime)
 							bThroughPortal = true;
 							if (VisibleActors.Find(PortalActor) < 0)
 							{
-								PortalActor->Seen(true);
+								PortalActor->Seen_Implementation(true);
 								VisibleActors.AddUnique(PortalActor);
 								NonVisibleActors.Remove(PortalActor);
 							}
@@ -279,7 +282,7 @@ void APortal::Tick(float DeltaTime)
 				{
 					if (NonVisibleActors.Find(PortalActor) < 0)
 					{
-						PortalActor->Seen(false);
+						PortalActor->Seen_Implementation(false);
 						NonVisibleActors.AddUnique(PortalActor);
 						VisibleActors.Remove(PortalActor);
 					}
@@ -329,13 +332,13 @@ void APortal::TransitActors()
 
 void APortal::TransitCharacter()
 {
-	if (PortalTag <= PortalCollections.Num() && !bTransitionControl)
+	if (PortalTag <= PortalCount && !bTransitionControl)
 	{
 		bTransitionControl = true;
-		float Visibility = UKismetMaterialLibrary::GetScalarParameterValue(this, PortalCollections[PortalTag - 1], FName("Visibility"));
+		float Visibility = UKismetMaterialLibrary::GetScalarParameterValue(this, PortalCollectionSingle, FName("Visibility" + FString::FromInt(PortalTag)));
 		Visibility = 1 - Visibility;
 		bIsPlayerSide = Visibility == 1.0 ? true: false;
-		UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollections[PortalTag - 1], FName("Visibility"), Visibility);
+		UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollectionSingle, FName("Visibility" + FString::FromInt(PortalTag)), Visibility);
 		if (ACubePlayerState* CubePlayerState = Cast<ACubePlayerState>(UGameplayStatics::GetPlayerState(this, 0)))
 		{
 			CubePlayerState->UpdatePortalState();

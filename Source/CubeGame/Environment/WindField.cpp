@@ -6,6 +6,7 @@
 #include "CubeGame/Character/CubeGameCharacter.h"
 #include "WindComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "CubeGame/Character/Ability/CubeAbilityBase.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -289,13 +290,13 @@ void AWindField::Tick(float DeltaTime)
 		WindStrength = WindSpeed * StrengthMultiplier;
 	}
 
-	if (BoxComponent)
+	if (BoxComponent && bIsActivate)
 	{
 		TArray<AActor*> OverlappingActors;
 		BoxComponent->GetOverlappingActors(OverlappingActors);
 		for (auto& Actor : OverlappingActors)
 		{
-			if (IsValid(Actor))
+			if (IsActorValid(Actor))
 			{
 				if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
 				{

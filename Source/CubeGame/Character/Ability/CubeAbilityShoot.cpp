@@ -114,17 +114,11 @@ bool ACubeAbilityShoot::IsValidTarget(AActor* Actor)
 		if (const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
 		{
 			// TODO fix hardcode
-			if (StaticMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
-			{
-				return StaticMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
-			}
+			return StaticMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
 		}
 		else if (const USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
 		{
-			if (StaticMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
-			{
-				return SkeletalMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
-			}
+			return SkeletalMeshComponent->IsSimulatingPhysics() && StaticMeshComponent->GetMass() <= MaxMass;
 		}
 	}
 	return false;
