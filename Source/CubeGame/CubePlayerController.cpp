@@ -22,6 +22,16 @@ ACubePlayerController::ACubePlayerController()
 	}
 }
 
+void ACubePlayerController::UpdateCharacter()
+{
+	if (IsValid(GetPawn()))
+	{
+		ActiveSpringArm = Cast<USpringArmComponent>(GetPawn()->GetComponentByClass<USpringArmComponent>());
+		ActiveCamera = Cast<UCameraComponent>(GetPawn()->GetComponentByClass<UCameraComponent>());
+		ActiveCapsuleComponent = Cast<UCapsuleComponent>(GetPawn()->GetComponentByClass<UCapsuleComponent>());
+	}
+}
+
 void ACubePlayerController::SyncOccludedActors()
 {
 	if (!ShouldCheckCameraOcclusion()) return;
@@ -39,7 +49,9 @@ void ACubePlayerController::SyncOccludedActors()
  
 	TArray<TEnumAsByte<EObjectTypeQuery>> CollisionObjectTypes;
 	CollisionObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
- 
+	CollisionObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_PhysicsBody));
+
+	
 	TArray<AActor*> ActorsToIgnore; // TODO: Add configuration to ignore actor types
 	TArray<FHitResult> OutHits;
  
@@ -196,8 +208,8 @@ void ACubePlayerController::OnHideOccludedActor(const FCameraOccludedActor& Occl
 	{
 		for (int i = 0; i < OccludedActor.StaticMeshComponent->GetNumMaterials(); ++i)
 		{
-			OccludedActor.StaticMeshComponent->SetMaterial(i, FadeMaterial);
-			// OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 1.0);
+			// OccludedActor.StaticMeshComponent->SetMaterial(i, FadeMaterial);
+			OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 0.0);
 		}
 	}
 }
@@ -219,8 +231,8 @@ void ACubePlayerController::OnShowOccludedActor(const FCameraOccludedActor& Occl
 	{
 		for (int matIdx = 0; matIdx < OccludedActor.Materials.Num(); ++matIdx)
 		{
-			OccludedActor.StaticMeshComponent->SetMaterial(matIdx, OccludedActor.Materials[matIdx]);
-			// OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 0.0);
+			// OccludedActor.StaticMeshComponent->SetMaterial(matIdx, OccludedActor.Materials[matIdx]);
+			OccludedActor.StaticMeshComponent->SetScalarParameterValueOnMaterials("Occlusion", 1.0);
 		}
 	}
 	

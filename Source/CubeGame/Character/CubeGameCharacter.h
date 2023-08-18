@@ -86,6 +86,9 @@ public:
 	class UCubeAnimInstance* AnimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> InfoWidgetClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UMaterialParameterCollection* MaterialParameterCollection;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -224,6 +227,10 @@ protected:
 	void BeginRadialMagnetic();
 
 	void EndRadialMagnetic();
+
+	void Cheating();
+
+	void OpenInfo();
 	
 	EShapeType CubeState;
 	
@@ -294,6 +301,9 @@ protected:
 
 	UPROPERTY()
 	class ACubeAbilityRadialMagnetic* AbilityRadialMagnetic;
+
+	UPROPERTY()
+	class UUserWidget* InfoWidget;
 
 public:
 	FVector GetMountLocation() const;

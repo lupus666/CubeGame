@@ -38,6 +38,29 @@ void ATransducerBase::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 {
 	if (IsValid(OtherActor))
 	{
+		if (TriggerActorClass != nullptr)
+		{
+			if (OtherActor->GetClass() == TriggerActorClass)
+			{
+				if (IsActorValid(OtherActor))
+				{
+					if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
+					{
+						IButtonInterface::Execute_Activate(ActivateActor, true);
+					}
+				}
+			}
+		}
+		if (TriggerActor == nullptr)
+		{
+			if (IsActorValid(OtherActor))
+			{
+				if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
+				{
+					IButtonInterface::Execute_Activate(ActivateActor, true);
+				}
+			}
+		}
 		if (OtherActor == TriggerActor)
 		{
 			if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
@@ -53,6 +76,29 @@ void ATransducerBase::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	if (IsValid(OtherActor))
 	{
+		if (TriggerActorClass != nullptr)
+		{
+			if (OtherActor->GetClass() == TriggerActorClass)
+			{
+				if (IsActorValid(OtherActor))
+				{
+					if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
+					{
+						IButtonInterface::Execute_Activate(ActivateActor, true);
+					}
+				}
+			}
+		}
+		if (TriggerActor == nullptr)
+		{
+			if (IsActorValid(OtherActor))
+			{
+				if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
+				{
+					IButtonInterface::Execute_Activate(ActivateActor, false);
+				}
+			}
+		}
 		if (OtherActor == TriggerActor)
 		{
 			if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))

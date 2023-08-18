@@ -89,7 +89,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 				const FVector GravityCenter = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
 				const FVector CaptureLocation = GravityCenter - UKismetMathLibrary::Normal(WindDirection) * CaptureDistance;
 			
-				UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+				UTextureRenderTarget2D* RTDepthMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 128, 128, ETextureRenderTargetFormat::RTF_RGBA8);
 				SceneCaptureDepth->ShowOnlyActors.Empty();
 				SceneCaptureDepth->ShowOnlyActors.Add(Actor);
 				SceneCaptureDepth->TextureTarget = RTDepthMap;
@@ -98,7 +98,7 @@ void AWindField::AddWindLoad(AActor* Actor)
 				SceneCaptureDepth->SetWorldRotation(WindDirection.Rotation());
 				SceneCaptureDepth->CaptureScene();
 
-				UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 256, 256, ETextureRenderTargetFormat::RTF_RGBA16f);
+				UTextureRenderTarget2D* RTNormalMap = UKismetRenderingLibrary::CreateRenderTarget2D(this, 128, 128, ETextureRenderTargetFormat::RTF_RGBA16f);
 				SceneCaptureNormal->ShowOnlyActors.Empty();
 				SceneCaptureNormal->ShowOnlyActors.Add(Actor);
 				SceneCaptureNormal->TextureTarget = RTNormalMap;
@@ -172,8 +172,15 @@ void AWindField::AddWindLoad(AActor* Actor)
 
 				//TODO deduce
 				const FVector TotalTorque = UKismetMathLibrary::Cross_VectorVector(RVector, TotalForce);
-				CubeGameCharacter->GetMesh()->AddForce(TotalForce);
-				// CubeGameCharacter->GetMesh()->AddTorqueInRadians(TotalTorque);
+				if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
+				{
+					WindComponent->TargetWindForce = TotalForce;
+					WindComponent->TargetWindTorque = TotalTorque;
+					WindComponent->UpdateCurrentWindLoad();
+					CubeGameCharacter->GetMesh()->AddForce(WindComponent->CurrentWindForce);
+					// CubeGameCharacter->GetMesh()->AddTorqueInRadians(WindComponent->CurrentWindTorque);
+				}
+				
 
 				// UKismetSystemLibrary::PrintString(this, TextureSize.ToString());
 				// UKismetSystemLibrary::PrintString(this, UKismetStringLibrary::Conv_IntToString(PixelCount));
@@ -183,6 +190,15 @@ void AWindField::AddWindLoad(AActor* Actor)
 				// UKismetSystemLibrary::PrintString(this, TotalForce.ToString());
 				// UKismetSystemLibrary::PrintString(this, TotalTorque.ToString());
 			}
+			// else
+			// {
+			// 	if (UWindComponent* WindComponent = Cast<UWindComponent>(Actor->GetComponentByClass<UWindComponent>()))
+			// 	{
+			// 		WindComponent->UpdateCurrentWindLoad();
+			// 		CubeGameCharacter->GetMesh()->AddForce(WindComponent->CurrentWindForce);
+			// 		// CubeGameCharacter->GetMesh()->AddTorqueInRadians(WindComponent->CurrentWindTorque);
+			// 	}
+			// }
 		}
 	}
 	else if (UStaticMeshComponent* StaticMesh = Actor->GetComponentByClass<UStaticMeshComponent>())
@@ -292,6 +308,7 @@ void AWindField::Tick(float DeltaTime)
 
 	if (BoxComponent && bIsActivate)
 	{
+		
 		TArray<AActor*> OverlappingActors;
 		BoxComponent->GetOverlappingActors(OverlappingActors);
 		for (auto& Actor : OverlappingActors)
@@ -322,5 +339,11 @@ void AWindField::Tick(float DeltaTime)
 void AWindField::Activate_Implementation(bool bActivate)
 {
 	bIsActivate = bActivate;
+	UpdateOverlaps();
+}
+
+bool AWindField::IsActivate_Implementation()
+{
+	return bIsActivate;
 }
 

@@ -23,6 +23,9 @@ public:
 	class APortalActor* TriggerActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AActor> TriggerActorClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class AActor* ActivateActor;
 	
 protected:

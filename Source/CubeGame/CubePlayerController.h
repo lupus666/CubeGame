@@ -35,6 +35,8 @@ class CUBEGAME_API ACubePlayerController : public APlayerController
 public:
 	ACubePlayerController();
 
+	void UpdateCharacter();
+	
 	UFUNCTION(BlueprintCallable)
 	void SyncOccludedActors();
 

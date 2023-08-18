@@ -59,8 +59,8 @@ void ACubeAbilityBase::AddImpulseToward(AActor* Actor, FVector TargetImpulse, fl
 		const FVector DeltaImpulse = TargetImpulse - Actor->GetActorLocation();
 		const FVector Impulse = DeltaImpulse.GetSafeNormal() * LinearStiffness - LinearVelocity - GetTargetGravity(Actor) * 0.5 * DeltaImpulse.Size() / LinearStiffness;
 		const FVector AngularImpulse = AngularVelocity * -AngularDamper;
-		UKismetSystemLibrary::PrintString(this, Impulse.ToString());
-		UKismetSystemLibrary::PrintString(this, DeltaImpulse.ToString());
+		// UKismetSystemLibrary::PrintString(this, Impulse.ToString());
+		// UKismetSystemLibrary::PrintString(this, DeltaImpulse.ToString());
 
 		AddImpulse(Actor, Impulse, AngularImpulse, true);
 	}
@@ -107,14 +107,14 @@ bool ACubeAbilityBase::IsValidTarget(AActor* Actor)
 		
 		if (const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Actor->GetComponentByClass<UStaticMeshComponent>()))
 		{
-			if (StaticMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
+			if (!StaticMeshComponent->GetCollisionProfileName().ToString().Contains("MeshNoCube"))
 			{
 				return StaticMeshComponent->IsSimulatingPhysics();
 			}
 		}
 		else if (const USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Actor->GetComponentByClass<USkeletalMeshComponent>()))
 		{
-			if (SkeletalMeshComponent->GetCollisionProfileName() != FName("MeshNoCube"))
+			if (!SkeletalMeshComponent->GetCollisionProfileName().ToString().Contains("MeshNoCube"))
 			{
 				return SkeletalMeshComponent->IsSimulatingPhysics();
 			}

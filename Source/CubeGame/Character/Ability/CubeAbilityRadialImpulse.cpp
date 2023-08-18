@@ -24,10 +24,13 @@ void ACubeAbilityRadialImpulse::GetTargets()
 	{
 		const FVector CubeLocation = CubeGameCharacter->GetMesh()->GetBoneLocation(CubeGameCharacter->GetBodyName());
 		TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
-				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
-				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
-				);
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
+			);
 		TArray<AActor* > OverlappingActors;
 		UKismetSystemLibrary::SphereOverlapActors(this, CubeLocation, Distance, ObjectTypes, nullptr, TArray<AActor*>({CubeGameCharacter}), OverlappingActors);
 		Targets = FilterTargets(OverlappingActors);

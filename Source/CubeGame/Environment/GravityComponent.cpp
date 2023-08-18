@@ -4,6 +4,8 @@
 #include "GravityComponent.h"
 
 #include  "CubeGame/Character/CubeGameCharacter.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values for this component's properties
 UGravityComponent::UGravityComponent()
@@ -11,7 +13,7 @@ UGravityComponent::UGravityComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	PrimaryComponentTick.TickGroup = TG_DuringPhysics;
 	// ...
 }
 
@@ -56,6 +58,7 @@ void UGravityComponent::AddGravity(FVector GravityDirection, int Priority)
 	if (Priority > GravityPriority)
 	{
 		GravityAccumulator = GravityDirection;
+		GravityPriority = Priority;
 	}
 	else if (Priority == GravityPriority)
 	{

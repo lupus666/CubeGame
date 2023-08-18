@@ -21,19 +21,19 @@ public:
 	ACubeAbilityGrab();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float GrabDistance = 3000.0f;
+	float GrabDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float GrabRadius = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float HoldDistance = 3000.0f;
+	float HoldDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bConsiderVelocity = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ThrowDistance = 5000.0f;
+	float ThrowDistance = 3000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrowRadius = 5.0f;

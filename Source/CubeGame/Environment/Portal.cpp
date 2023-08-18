@@ -6,6 +6,7 @@
 #include "PortalActor.h"
 #include "WindField.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "CubeGame/CubeGameStateBase.h"
 #include "CubeGame/CubePlayerState.h"
 #include "CubeGame/Character/CubeGameCharacter.h"
@@ -19,7 +20,7 @@ APortal::APortal()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	PrimaryActorTick.TickGroup = TG_PrePhysics;
 	PortalPlane = CreateDefaultSubobject<UStaticMeshComponent>("PortalPlane");
 	RootComponent = PortalPlane;
 
@@ -89,24 +90,24 @@ void APortal::BeginPlay()
 		}
 	}
 
-	bool bCanEnter = true;
-	for (auto& Portal: OtherPortals)
-	{
-		if (Portal->bIsActive)
-		{
-			bCanEnter = false;
-		}
-	}
-
-	//TODO debug
-	if (bCanEnter && !bIsActive)
-	{
-		if (PortalTag <= PortalCount)
-		{
-			UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollectionSingle,
-				FName(FString("Visibility") + FString::FromInt(PortalTag)), bIsActive);
-		}
-	}
+	// bool bCanEnter = true;
+	// for (auto& Portal: OtherPortals)
+	// {
+	// 	if (Portal->bIsActive)
+	// 	{
+	// 		bCanEnter = false;
+	// 	}
+	// }
+	//
+	// //TODO debug
+	// if (bCanEnter && !bIsActive)
+	// {
+	// 	if (PortalTag <= PortalCount)
+	// 	{
+	// 		UKismetMaterialLibrary::SetScalarParameterValue(this, PortalCollectionSingle,
+	// 			FName(FString("Visibility") + FString::FromInt(PortalTag)), bIsActive);
+	// 	}
+	// }
 }
 
 void APortal::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -129,8 +130,8 @@ void APortal::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		}
 		if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))
 		{
-			UBoxComponent* CubeBoxComponent = CubeGameCharacter->GetComponentByClass<UBoxComponent>();
-			if (CubeBoxComponent == OtherComp)
+			USphereComponent* SphereComponent = CubeGameCharacter->GetComponentByClass<USphereComponent>();
+			if (SphereComponent == OtherComp)
 			{
 				bIsCharacterOverlap = !bIsCharacterOverlap;
 			}
@@ -145,14 +146,17 @@ void APortal::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Other
 	{
 		if (APortalActor* PortalActor = Cast<APortalActor>(OtherActor))
 		{
-			for (auto& Tag: PortalActor->Tags)
+			if (!PortalActor->bIsStatic)
 			{
-				TArray<FString> ParsedName;
-				Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
-				if (UKismetStringLibrary::Conv_StringToInt(ParsedName.Top()) == PortalTag)
+				for (auto& Tag: PortalActor->Tags)
 				{
-					PortalActor->EndOverlap(OtherComp, this);
-					break;
+					TArray<FString> ParsedName;
+					Tag.ToString().ParseIntoArray(ParsedName, TEXT("Portal"), true);
+					if (UKismetStringLibrary::Conv_StringToInt(ParsedName.Top()) == PortalTag)
+					{
+						PortalActor->EndOverlap(OtherComp, this);
+						break;
+					}
 				}
 			}
 		}
@@ -195,12 +199,13 @@ void APortal::Tick(float DeltaTime)
 		if (bIsBackSide != bIsBackSideLast)
 		{
 			bIsBackSideLast = bIsBackSide;
-			if (BoxComponent->IsOverlappingActor(UGameplayStatics::GetPlayerPawn(this, 0)))
-			{
-				//TODO Debug
-				TransitCharacter();
-			}
-			else if (bIsCharacterOverlap)
+			// if (BoxComponent->IsOverlappingActor(UGameplayStatics::GetPlayerPawn(this, 0)))
+			// {
+			// 	//TODO Debug
+			// 	TransitCharacter();
+			// }
+			// else
+			if (bIsCharacterOverlap)
 			{
 				bIsCharacterOverlap = false;
 				TransitCharacter();
@@ -248,7 +253,13 @@ void APortal::Tick(float DeltaTime)
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery9)}
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery9),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery10),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery11),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery12),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
 			);
 		for (auto& Actor: PortalActors)
 		{
@@ -315,7 +326,8 @@ void APortal::Activate_Implementation(bool bActivate)
 
 void APortal::Transition(bool bActivate)
 {
-	bIsActive = bActivate;
+	// Activate_Implementation(bActivate);
+	// bIsActive = bActivate;
 	if (bIsActive)
 	{
 		PortalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -358,7 +370,10 @@ void APortal::TransitCharacter()
 			}
 			else if (APortal* Portal = Cast<APortal>(Actor))
 			{
-				Portal->Transition(Visibility == 1.0);
+				if (Portal != this)
+				{
+					Portal->Transition(Visibility == 1.0);
+				}
 			}
 		}
 

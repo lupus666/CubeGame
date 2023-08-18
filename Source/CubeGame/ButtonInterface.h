@@ -26,4 +26,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Activate(bool bActivate);
 	// virtual void Activate_Implementation(bool bActivate) = 0;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	bool IsActivate();
 };

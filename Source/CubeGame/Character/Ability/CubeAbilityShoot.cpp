@@ -24,7 +24,10 @@ void ACubeAbilityShoot::FindGrabTarget()
 		TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
 			);
 		FHitResult HitResult;
 		TArray<AActor* > IgnoreObjects = GrabTargets;
@@ -65,10 +68,13 @@ void ACubeAbilityShoot::ShootGrabTarget()
 			const FVector End = CameraLocation + ShootDistance * CameraForwardVector;
 
 			TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
-			);
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
+				);
 			FHitResult HitResult;
 
 			FVector Target;

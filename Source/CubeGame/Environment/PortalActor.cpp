@@ -121,7 +121,7 @@ void APortalActor::Seen_Implementation(bool bIsVisible)
 	{
 		bVisibility = GetVisibility(bIsVisible);
 		// ECollisionEnabled::Type CollisionType = bVisibility ? ECollisionEnabled::QueryAndPhysics: ECollisionEnabled::QueryAndPhysics;
-		FName MeshProfileName = bVisibility ? FName("PhysicsActor"): FName("MeshNoCube" + Tags[0].ToString());
+		FName MeshProfileName;
 		if (bVisibility && (bIsInversed? bIsInversionVisibility: !bIsInversionVisibility))
 		{
 			MeshProfileName = FName("PhysicsActor" + Tags[0].ToString());

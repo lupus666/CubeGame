@@ -20,7 +20,9 @@
 #include "Ability/CubeAbilityRadialImpulse.h"
 #include "Ability/CubeAbilityRadialMagnetic.h"
 #include "Ability/CubeAbilityShoot.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/TimelineComponent.h"
+#include "CubeGame/CubeGameGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -82,7 +84,7 @@ void ACubeGameCharacter::Tick(float DeltaSeconds)
 		// GetMesh()->SetWorldLocation(UKismetMathLibrary::VectorSpringInterp(GetMesh()->GetComponentLocation(),
 		// GetCharacterMovement()->GetActorLocation() + FVector(0, 0, 3.0f), MovementSpring, 10, 1, DeltaSeconds));
 		// GetMesh()->SetWorldLocation(GetCharacterMovement()->GetActorLocation());
-		GetMesh()->AddWorldOffset((GetCapsuleComponent()->GetComponentLocation() - GetMesh()->GetComponentLocation()) * DeltaSeconds, false);
+		GetMesh()->AddWorldOffset((GetCapsuleComponent()->GetComponentLocation() + UpVector - GetMesh()->GetComponentLocation()) * DeltaSeconds, false);
 	}
 	else
 	{
@@ -199,8 +201,8 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("RotateForward", this, &ACubeGameCharacter::RotateForward);
 	PlayerInputComponent->BindAxis("RotateRight", this, &ACubeGameCharacter::RotateRight);
 	
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACubeGameCharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	// PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACubeGameCharacter::Jump);
+	// PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ACubeGameCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ACubeGameCharacter::EndSprint);
 	PlayerInputComponent->BindAction("Tighten", IE_Pressed, this, &ACubeGameCharacter::BeginTighten);
@@ -224,8 +226,8 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("Grab", IE_Released, this, &ACubeGameCharacter::EndGrab);
 	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ACubeGameCharacter::Throw);
 
-	PlayerInputComponent->BindAction("Target", IE_Released, this, &ACubeGameCharacter::Target);
-	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ACubeGameCharacter::Shoot);
+	// PlayerInputComponent->BindAction("Target", IE_Released, this, &ACubeGameCharacter::Target);
+	// PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ACubeGameCharacter::Shoot);
 	
 	PlayerInputComponent->BindAction("DilationDefense", IE_Pressed, this, &ACubeGameCharacter::BeginDilationDefense);
 	PlayerInputComponent->BindAction("DilationDefense", IE_Released, this, &ACubeGameCharacter::EndDilationDefense);
@@ -235,6 +237,8 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("RadialImpulse", IE_Pressed, this, &ACubeGameCharacter::BeginRadialImpulse);
 	PlayerInputComponent->BindAction("RadialImpulse", IE_Released, this, &ACubeGameCharacter::EndRadialImpulse);
 
+	PlayerInputComponent->BindAction("Cheating", IE_Released, this, &ACubeGameCharacter::Cheating);
+	PlayerInputComponent->BindAction("Info", IE_Released, this, &ACubeGameCharacter::OpenInfo);
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -873,7 +877,7 @@ void ACubeGameCharacter::EndDilationDefense()
 
 void ACubeGameCharacter::BeginGrab()
 {
-	if (CubeState == EShapeType::Cube)
+	// if (CubeState == EShapeType::Cube)
 	{
 		AbilityGrab = Cast<ACubeAbilityGrab>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this,
 			ACubeAbilityGrab::StaticClass(), FTransform(GetActorLocation())));
@@ -888,7 +892,7 @@ void ACubeGameCharacter::BeginGrab()
 
 void ACubeGameCharacter::EndGrab()
 {
-	if (CubeState == EShapeType::Cube)
+	// if (CubeState == EShapeType::Cube)
 	{
 		if (IsValid(AbilityGrab) && IsValid(AbilityGrab->GetGrabTarget()))
 		{
@@ -902,7 +906,7 @@ void ACubeGameCharacter::EndGrab()
 
 void ACubeGameCharacter::Throw()
 {
-	if (CubeState == EShapeType::Cube)
+	// if (CubeState == EShapeType::Cube)
 	{
 		if (IsValid(AbilityGrab) && IsValid(AbilityGrab->GetGrabTarget()))
 		{
@@ -977,6 +981,35 @@ void ACubeGameCharacter::EndRadialMagnetic()
 		AbilityRadialMagnetic->ChargeTime = (GetWorld()->GetTimeSeconds() - ChargeTime);
 		UGameplayStatics::FinishSpawningActor(AbilityRadialMagnetic, FTransform(GetActorLocation()));
 	}
+}
+
+void ACubeGameCharacter::Cheating()
+{
+	if (ACubeGameGameMode* CubeGameGameMode = Cast<ACubeGameGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		CubeGameGameMode->CheatingSpawn();
+	}
+}
+
+void ACubeGameCharacter::OpenInfo()
+{
+	if (InfoWidget == nullptr)
+	{
+		if (InfoWidgetClass)
+		{
+			InfoWidget = CreateWidget(UGameplayStatics::GetPlayerController(this, 0), InfoWidgetClass);
+			if (InfoWidget)
+			{
+				InfoWidget->AddToViewport();
+			}
+		}
+	}
+	else
+	{
+		InfoWidget->RemoveFromParent();
+		InfoWidget = nullptr;
+	}
+	
 }
 
 void ACubeGameCharacter::BeginRadialMagnetic()

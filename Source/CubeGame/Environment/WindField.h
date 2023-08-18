@@ -79,6 +79,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Activate_Implementation(bool bActivate) override;
+
+	virtual bool IsActivate_Implementation() override;
 	
 	float CalcWindLoadByArea(float WindSurfaceArea) const;
 

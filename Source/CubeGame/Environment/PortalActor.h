@@ -21,7 +21,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsInversed = false;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsStatic = true;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -51,6 +54,7 @@ protected:
 
 	bool bIsInversionVisibility;
 
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -3,14 +3,17 @@
 
 #include "CubeGameStateBase.h"
 
+#include "Kismet/GameplayStatics.h"
+
 ACubeGameStateBase::ACubeGameStateBase()
 {
-	// PortalCount = PortalCollections.Num();
+	
 }
 
 void ACubeGameStateBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// PortalCount = PortalCollections.Num();
+	UGameplayStatics::GetAllActorsWithTag(this, "PrerequisiteActor", PrerequisiteActors);
+	UGameplayStatics::GetAllActorsWithTag(this, "TargetPortal", TargetActor);
 }

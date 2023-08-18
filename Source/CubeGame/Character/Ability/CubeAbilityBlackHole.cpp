@@ -39,7 +39,7 @@ void ACubeAbilityBlackHole::PullTowardsCenter()
 				const FVector Direction = (GetActorLocation() - Actor->GetActorLocation()).GetSafeNormal();
 				const float StrengthMultiplier = FMath::Pow(1 - GetDistanceTo(Actor) / Radius, StrengthExponent);
 				const FVector Force = Direction * Strength * StrengthMultiplier;
-				UKismetSystemLibrary::PrintString(this, Force.ToString());
+				// UKismetSystemLibrary::PrintString(this, Force.ToString());
 				AddForce(Actor, Force, FVector(0,0,0), true);
 			}
 		}

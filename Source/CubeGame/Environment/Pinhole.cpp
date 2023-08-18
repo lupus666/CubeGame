@@ -102,7 +102,7 @@ void APinhole::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 
 			}
 			// CyberCube->GetCube()->SetSimulatePhysics(true);
-			UKismetSystemLibrary::PrintString(this, "End");
+			// UKismetSystemLibrary::PrintString(this, "End");
 		}
 	}
 	else if (ACubeGameCharacter* CubeGameCharacter = Cast<ACubeGameCharacter>(OtherActor))

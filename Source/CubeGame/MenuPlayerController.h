@@ -26,7 +26,7 @@ public:
 	FName StartLevelName = "LevelCubeWorld";
 
 	UPROPERTY(EditAnywhere)
-	FName DemoLevelName = "DemoGame";
+	FName DemoLevelName = "LevelZero";
 	
 	UPROPERTY()
 	class UUserWidget* CurrentWidget;

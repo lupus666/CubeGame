@@ -15,8 +15,20 @@ public:
 	ACubeGameGameMode();
 
 	UFUNCTION()
-	void Respawn(AActor* Actor);
+	void RespawnCharacter(AActor* Actor);
 
+	UFUNCTION()
+	void RespawnEssentialObject(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsPreconditionMet();
+
+	UFUNCTION()
+	void CheatingSpawn();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AActor> CheatingBridgeClass;
+	
 protected:
 	virtual void BeginPlay() override;
 };

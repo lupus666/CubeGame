@@ -32,7 +32,10 @@ void ACubeAbilityGrab::FindGrabTarget()
 		TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
 			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
 			);
 		FHitResult HitResult;
 		TArray<AActor* > IgnoreObjects({CubeGameCharacter});
@@ -43,7 +46,7 @@ void ACubeAbilityGrab::FindGrabTarget()
 		// UGameplayStatics::GetAllActorsOfClass(this, AGravityVolumeBase::StaticClass(), GravityVolumes);
 		// IgnoreObjects += GravityVolumes;
 		if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, GrabRadius, ObjectTypes,
-			false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
+			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
 		{
 			AActor* Actor = HitResult.GetActor();
 			if (IsValidTarget(Actor))
@@ -75,15 +78,18 @@ void ACubeAbilityGrab::ThrowGrabTarget()
 			const FVector End = CameraLocation + ThrowDistance * CameraForwardVector;
 
 			TArray<TEnumAsByte<EObjectTypeQuery> > ObjectTypes({
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
-			TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4)}
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery2),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery3),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery4),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery13),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery14),
+				TEnumAsByte<EObjectTypeQuery>(ObjectTypeQuery15)}
 			);
 			FHitResult HitResult;
 
 			FVector Target;
 			if (UKismetSystemLibrary::SphereTraceSingleForObjects(this, Start, End, ThrowRadius, ObjectTypes,
-			false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
+			false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
 			{
 				Target = HitResult.GetActor()->GetActorLocation();
 			}
@@ -91,7 +97,7 @@ void ACubeAbilityGrab::ThrowGrabTarget()
 			{
 				Cast<ACubePlayerController>(CubeGameCharacter->GetController());
 				if (UKismetSystemLibrary::SphereTraceSingle(this, HitResult.TraceStart, HitResult.TraceEnd, ThrowRadius,
-					ETraceTypeQuery::TraceTypeQuery1, false, IgnoreObjects, EDrawDebugTrace::ForDuration, HitResult, true))
+					ETraceTypeQuery::TraceTypeQuery1, false, IgnoreObjects, EDrawDebugTrace::None, HitResult, true))
 				{
 					Target = HitResult.Location;
 				}

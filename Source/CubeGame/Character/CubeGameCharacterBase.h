@@ -33,6 +33,12 @@ class CUBEGAME_API ACubeGameCharacterBase : public ACharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float MinGravityTurnAngle = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	float MinCameraDistance = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	float MaxCameraDistance = 1000.0f;
 public:
 	// Sets default values for this character's properties
 	ACubeGameCharacterBase();
