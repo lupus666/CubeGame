@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CubeGame/ButtonInterface.h"
 #include "GameFramework/Actor.h"
 #include "Portal.generated.h"
 
 UCLASS()
-class CUBEGAME_API APortal : public AActor
+class CUBEGAME_API APortal : public AActor, public IButtonInterface
 {
 	GENERATED_BODY()
 
@@ -51,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bCanItemsOverlap;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsMainPortal;
+	
 	bool bIsPlayerSide;
 protected:
 	// Called when the game starts or when spawned
@@ -89,7 +93,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	void Activate();
+	virtual void Activate_Implementation(bool bActivate) override;
 
 	void Transition(bool bActivate);
 
@@ -98,7 +102,7 @@ public:
 	void TransitCharacter();
 
 	void ResetSeeActor(AActor* Actor);
-
+	
 	UStaticMeshComponent* GetPortalPlane() const
 	{
 		return PortalPlane;

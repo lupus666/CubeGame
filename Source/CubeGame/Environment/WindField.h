@@ -9,7 +9,7 @@
 #include "WindField.generated.h"
 
 UCLASS()
-class CUBEGAME_API AWindField : public APortalActor
+class CUBEGAME_API AWindField : public APortalActor, public IButtonInterface
 {
 	GENERATED_BODY()
 	
@@ -78,6 +78,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void Activate_Implementation(bool bActivate) override;
+	
 	float CalcWindLoadByArea(float WindSurfaceArea) const;
 
 	static TArray<FVector> GetCubeNormals(const FVector& ForwardVector);

@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "PortalActor.h"
-#include "Components/ArrowComponent.h"
+#include "CubeGame/ButtonInterface.h"
 #include "GameFramework/Actor.h"
 #include "GravityVolumeBase.generated.h"
 
 UCLASS()
-class CUBEGAME_API AGravityVolumeBase : public APortalActor
+class CUBEGAME_API AGravityVolumeBase : public APortalActor, public IButtonInterface
 {
 	GENERATED_BODY()
 	
@@ -39,6 +39,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+	virtual void Activate_Implementation(bool bActivate) override;
 
 	FVector GetGravityDirection();
 };

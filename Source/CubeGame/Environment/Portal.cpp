@@ -292,13 +292,20 @@ void APortal::Tick(float DeltaTime)
 	}
 }
 
-void APortal::Activate()
+void APortal::Activate_Implementation(bool bActivate)
 {
-	bIsActive = true;
+	bIsActive = bActivate;
 
 	for (auto& Portal: OtherPortals)
 	{
-		Portal->bIsActive = false;
+		if (Portal->bIsMainPortal)
+		{
+			Portal->bIsActive = !bActivate;
+		}
+		else
+		{
+			Portal->bIsActive = false;
+		}
 		Portal->ResetSeeActor(nullptr);
 	}
 	

@@ -56,6 +56,11 @@ void AGravityVolumeBase::Tick(float DeltaTime)
 
 }
 
+void AGravityVolumeBase::Activate_Implementation(bool bActivate)
+{
+	bCanRotate = bActivate;
+}
+
 FVector AGravityVolumeBase::GetGravityDirection()
 {
 	return UKismetMathLibrary::Normal(GetActorRotation().RotateVector(GravityDirection));

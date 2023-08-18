@@ -319,3 +319,8 @@ void AWindField::Tick(float DeltaTime)
 	CurveTime += DeltaTime;
 }
 
+void AWindField::Activate_Implementation(bool bActivate)
+{
+	bIsActivate = bActivate;
+}
+
