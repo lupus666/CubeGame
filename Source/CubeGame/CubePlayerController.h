@@ -36,6 +36,9 @@ public:
 	ACubePlayerController();
 
 	void UpdateCharacter();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateInfoWidget();
 	
 	UFUNCTION(BlueprintCallable)
 	void SyncOccludedActors();
@@ -48,6 +51,12 @@ public:
 
 	UFUNCTION()
 	void MainMenu();
+
+	UFUNCTION()
+	void OpenInfo();
+
+	UFUNCTION()
+	void CloseInfo();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -58,6 +67,21 @@ protected:
 	UPROPERTY()
 	class UUserWidget* PauseWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UUserWidget> InfoWidgetClass;
+	
+	UPROPERTY()
+	class UUserWidget* InfoWidget;
+	
+	UPROPERTY()
+	class UCheckBox* PortalCheckBox;
+
+	UPROPERTY()
+	TArray<UCheckBox*> CheckBoxes;
+
+	UPROPERTY()
+	class UTextBlock* PlayTime;
+	
 	UPROPERTY()
 	class UButton* ReturnGameButton;
 
@@ -84,7 +108,7 @@ protected:
  
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera Occlusion")
 	bool DebugLineTraces;
-  
+
 private:
 	UPROPERTY()
 	TMap<const AActor*, FCameraOccludedActor> OccludedActors;

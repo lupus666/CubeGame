@@ -95,6 +95,8 @@ public:
 	
 	virtual void Activate_Implementation(bool bActivate) override;
 
+	virtual bool IsActivate_Implementation() override;
+	
 	void Transition(bool bActivate);
 
 	void TransitActors();

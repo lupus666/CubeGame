@@ -238,7 +238,6 @@ void ACubeGameCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("RadialImpulse", IE_Released, this, &ACubeGameCharacter::EndRadialImpulse);
 
 	PlayerInputComponent->BindAction("Cheating", IE_Released, this, &ACubeGameCharacter::Cheating);
-	PlayerInputComponent->BindAction("Info", IE_Released, this, &ACubeGameCharacter::OpenInfo);
 }
 
 FName ACubeGameCharacter::GetBodyName() const
@@ -989,27 +988,6 @@ void ACubeGameCharacter::Cheating()
 	{
 		CubeGameGameMode->CheatingSpawn();
 	}
-}
-
-void ACubeGameCharacter::OpenInfo()
-{
-	if (InfoWidget == nullptr)
-	{
-		if (InfoWidgetClass)
-		{
-			InfoWidget = CreateWidget(UGameplayStatics::GetPlayerController(this, 0), InfoWidgetClass);
-			if (InfoWidget)
-			{
-				InfoWidget->AddToViewport();
-			}
-		}
-	}
-	else
-	{
-		InfoWidget->RemoveFromParent();
-		InfoWidget = nullptr;
-	}
-	
 }
 
 void ACubeGameCharacter::BeginRadialMagnetic()

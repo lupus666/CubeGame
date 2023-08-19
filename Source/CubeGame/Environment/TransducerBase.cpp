@@ -46,26 +46,26 @@ void ATransducerBase::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 				{
 					if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 					{
-						IButtonInterface::Execute_Activate(ActivateActor, true);
+						IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 					}
 				}
 			}
 		}
-		if (TriggerActor == nullptr)
+		else if (TriggerActor == nullptr)
 		{
 			if (IsActorValid(OtherActor))
 			{
 				if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 				{
-					IButtonInterface::Execute_Activate(ActivateActor, true);
+					IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 				}
 			}
 		}
-		if (OtherActor == TriggerActor)
+		else if (OtherActor == TriggerActor)
 		{
 			if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 			{
-				IButtonInterface::Execute_Activate(ActivateActor, true);
+				IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 			}
 		}
 	}
@@ -84,26 +84,26 @@ void ATransducerBase::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 				{
 					if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 					{
-						IButtonInterface::Execute_Activate(ActivateActor, true);
+						IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 					}
 				}
 			}
 		}
-		if (TriggerActor == nullptr)
+		else if (TriggerActor == nullptr)
 		{
 			if (IsActorValid(OtherActor))
 			{
 				if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 				{
-					IButtonInterface::Execute_Activate(ActivateActor, false);
+					IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 				}
 			}
 		}
-		if (OtherActor == TriggerActor)
+		else if (OtherActor == TriggerActor)
 		{
 			if (IButtonInterface* ButtonInterface = Cast<IButtonInterface>(ActivateActor))
 			{
-				IButtonInterface::Execute_Activate(ActivateActor, false);
+				IButtonInterface::Execute_Activate(ActivateActor, !IButtonInterface::Execute_IsActivate(ActivateActor));
 			}
 		}
 	}

@@ -324,6 +324,11 @@ void APortal::Activate_Implementation(bool bActivate)
 	PortalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
+bool APortal::IsActivate_Implementation()
+{
+	return bIsActive;
+}
+
 void APortal::Transition(bool bActivate)
 {
 	// Activate_Implementation(bActivate);

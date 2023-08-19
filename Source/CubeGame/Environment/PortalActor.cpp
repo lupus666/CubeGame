@@ -81,7 +81,16 @@ void APortalActor::InitStaticShape(UShapeComponent* StaticShapeComponent)
 {
 	if (IsValid(StaticShapeComponent))
 	{
-		if (bIsInversed | (Tags.Num() == 0))
+		bool bIsPortalRelated = false;
+		for (auto& Tag: Tags)
+		{
+			if (Tag.ToString().Contains("Portal"))
+			{
+				bIsPortalRelated = true;
+				break;
+			}
+		}
+		if (bIsInversed | !bIsPortalRelated)
 		{
 			// StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			StaticShapeComponent->SetCollisionProfileName(FName("OverlapAll"));

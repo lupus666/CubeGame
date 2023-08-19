@@ -3,15 +3,21 @@
 
 #include "CubePlayerController.h"
 
+#include "ButtonInterface.h"
+#include "CubeGameStateBase.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/Button.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/CheckBox.h"
+#include "Components/TextBlock.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetTextLibrary.h"
 
 ACubePlayerController::ACubePlayerController()
 {
@@ -29,6 +35,23 @@ void ACubePlayerController::UpdateCharacter()
 		ActiveSpringArm = Cast<USpringArmComponent>(GetPawn()->GetComponentByClass<USpringArmComponent>());
 		ActiveCamera = Cast<UCameraComponent>(GetPawn()->GetComponentByClass<UCameraComponent>());
 		ActiveCapsuleComponent = Cast<UCapsuleComponent>(GetPawn()->GetComponentByClass<UCapsuleComponent>());
+	}
+}
+
+void ACubePlayerController::UpdateInfoWidget()
+{
+	if (ACubeGameStateBase* CubeGameStateBase = Cast<ACubeGameStateBase>(UGameplayStatics::GetGameState(this)))
+	{
+		TArray<AActor* > PrerequisiteActors = CubeGameStateBase->GetPrerequisiteActors();
+		for (int i = 0; i < PrerequisiteActors.Num(); i++)
+		{
+			CheckBoxes[i]->SetCheckedState(IButtonInterface::Execute_IsActivate(PrerequisiteActors[i])? ECheckBoxState::Checked:ECheckBoxState::Unchecked);
+		}
+		if (CubeGameStateBase->GetTargetActor().Num())
+		{
+			PortalCheckBox->SetCheckedState(IButtonInterface::Execute_IsActivate(CubeGameStateBase->GetTargetActor()[0]) ? ECheckBoxState::Checked:ECheckBoxState::Unchecked);
+		}
+		PlayTime->SetText(UKismetTextLibrary::Conv_DoubleToText(GetWorld()->GetTimeSeconds(), HalfFromZero));
 	}
 }
 
@@ -129,6 +152,22 @@ void ACubePlayerController::MainMenu()
 	UGameplayStatics::OpenLevel(this, "LevelMenu", false);
 }
 
+void ACubePlayerController::OpenInfo()
+{
+	if (InfoWidget)
+	{
+		InfoWidget->AddToViewport();
+	}
+}
+
+void ACubePlayerController::CloseInfo()
+{
+	if (InfoWidget)
+	{
+		InfoWidget->RemoveFromParent();
+	}
+}
+
 void ACubePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -163,6 +202,24 @@ void ACubePlayerController::BeginPlay()
 		{
 			InputComponent->BindAction("Pause", IE_Pressed, this, &ACubePlayerController::PauseGame);
 		}
+	}
+	if (InfoWidgetClass)
+	{
+		InfoWidget = CreateWidget<UUserWidget>(this, InfoWidgetClass);
+		if (InfoWidget)
+		{
+			CheckBoxes.Add(Cast<UCheckBox>(InfoWidget->GetWidgetFromName(FName("RedCheckBox"))));
+			CheckBoxes.Add(Cast<UCheckBox>(InfoWidget->GetWidgetFromName(FName("GreenCheckBox"))));
+			CheckBoxes.Add(Cast<UCheckBox>(InfoWidget->GetWidgetFromName(FName("BlueCheckBox"))));
+			PortalCheckBox = Cast<UCheckBox>(InfoWidget->GetWidgetFromName(FName("PortalCheckBox")));
+			PlayTime = Cast<UTextBlock>(InfoWidget->GetWidgetFromName(FName("PlayTime")));
+		}
+		if (InputComponent)
+		{
+			InputComponent->BindAction("Info", IE_Pressed, this, &ACubePlayerController::OpenInfo);
+			InputComponent->BindAction("Info", IE_Released, this, &ACubePlayerController::CloseInfo);
+		}
+
 	}
 }
 
