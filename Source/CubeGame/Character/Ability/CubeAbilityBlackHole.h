@@ -25,13 +25,13 @@ public:
 	float MinRadius = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float MaxRadius = 1000.0f;
+	float MaxRadius = 2000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MinMaxTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Strength = 12000.0f;
+	float Strength = 15000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float StrengthExponent = 2.f;

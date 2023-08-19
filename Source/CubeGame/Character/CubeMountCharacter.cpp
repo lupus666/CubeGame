@@ -113,18 +113,16 @@ void ACubeMountCharacter::UnMount()
 
 void ACubeMountCharacter::TimeDilation()
 {
-	UGameplayStatics::SetGlobalTimeDilation(this, 0.2);
-	CustomTimeDilation = 1.0 / 0.2;
-	// if (bTimeDilation)
-	// {
-	// 	DilationTimelineComponent->Reverse();
-	// 	bTimeDilation = false;
-	// }
-	// else
-	// {
-	// 	DilationTimelineComponent->Play();
-	// 	bTimeDilation = true;
-	// }
+	if (bTimeDilation)
+	{
+		DilationTimelineComponent->Reverse();
+		bTimeDilation = false;
+	}
+	else
+	{
+		DilationTimelineComponent->Play();
+		bTimeDilation = true;
+	}
 }
 
 void ACubeMountCharacter::OnDilationTimelineTick(float Value)
